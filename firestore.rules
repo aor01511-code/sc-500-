@@ -1,0 +1,111 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    // Entity Blueprint Validator
+    function isValidUserProgress(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'studyRound',
+          'lang',
+          'userRecords',
+          'questionStats',
+          'bookmarkedIds',
+          'roundHistory',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId',
+          'studyRound',
+          'lang',
+          'userRecords',
+          'questionStats',
+          'bookmarkedIds',
+          'roundHistory',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId.size() >= 1
+        && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.ownerId == request.auth.uid
+        && data.studyRound is int
+        && data.studyRound >= 1
+        && data.studyRound <= 1000
+        && data.lang is string
+        && data.lang.size() == 2
+        && data.lang in ['ja', 'en']
+        && data.userRecords is map
+        && data.userRecords.size() <= 2000
+        && data.questionStats is map
+        && data.questionStats.size() <= 2000
+        && data.bookmarkedIds is list
+        && data.bookmarkedIds.size() <= 2000
+        && (data.bookmarkedIds.size() == 0 || (data.bookmarkedIds[0] is string && data.bookmarkedIds[0].size() <= 128))
+        && data.roundHistory is list
+        && data.roundHistory.size() <= 200
+        && (data.roundHistory.size() == 0 || data.roundHistory[0] is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Per-user cross-device cloud save document
+    match /userProgress/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserProgress(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserProgress(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'studyRound',
+          'lang',
+          'userRecords',
+          'questionStats',
+          'bookmarkedIds',
+          'roundHistory',
+          'updatedAt'
+        ]);
+      allow delete: if isOwner(userId) && isValidId(userId);
+    }
+  }
+}

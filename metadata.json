@@ -1,0 +1,6 @@
+{
+  "name": "SC-500 Microsoft Security 模擬問題集",
+  "description": "Microsoft Defender XDR, Sentinel, Purview, Entra ID, Defender CSPM/CIEMに対応した日本語・英語対応のセキュリティ認定試験対策プラットフォーム",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

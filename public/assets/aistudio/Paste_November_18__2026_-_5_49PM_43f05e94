@@ -1,0 +1,629 @@
+Your organization has 300 Windows Server 2012 R2 servers running in an isolated operational technology (OT) network segment. These servers have no direct internet connectivity and cannot communicate with Azure endpoints, so the Azure Monitor Agent (AMA) cannot be installed or configured directly on each server. A single hardened Windows Server 2019 machine in the same network segment does have outbound internet access to Azure.
+
+You need to ensure that Windows Security events from all 300 OT servers are collected by Microsoft Sentinel while meeting the network connectivity constraints.
+
+What should you do?
+
+回答は不正解です
+Enable auto-provisioning of the Log Analytics agent in Microsoft Defender for Cloud for the subscription containing the OT servers, and rely on Defender for Cloud to forward Security events to Microsoft Sentinel.
+説明
+This answer is incorrect. Defender for Cloud auto-provisioning of agents does not resolve the connectivity limitation of the isolated servers, and Defender for Cloud is not the mechanism used to forward Windows Security events into Microsoft Sentinel via WEF.
+Install the Azure Monitor Agent on each of the 300 OT servers, and create a single data collection rule (DCR) that collects Windows Security events from the Security event log on each server.
+説明
+This answer is incorrect. The OT servers have no internet connectivity, so AMA cannot connect to Azure Monitor endpoints from each of the 300 servers individually, making this approach technically impossible in this environment.
+正解
+Configure the 300 OT servers as Windows Event Forwarding (WEF) source computers that forward Security events to the internet-connected server acting as a Windows Event Collector (WEC), install the Azure Monitor Agent on the WEC server, and create a DCR that collects events from the ForwardedEvents log.
+説明
+This answer is correct. Windows Event Forwarding allows the isolated source computers to forward Security events over the local network to a WEC server without requiring internet access; installing AMA only on the internet-connected collector and configuring a DCR to collect from the ForwardedEvents log is the supported Microsoft Sentinel pattern for this scenario.
+Install the legacy Log Analytics agent (Microsoft Monitoring Agent) on each of the 300 OT servers and connect them directly to the Log Analytics workspace used by Microsoft Sentinel.
+説明
+This answer is incorrect. The Log Analytics agent (MMA) is deprecated and was retired, and it still requires network connectivity to Azure from each server, which is not available on the isolated OT servers.
+全体的な説明
+When source computers cannot reach Azure directly, Windows Event Forwarding is used to centralize event collection on a WEC server that does have connectivity. Installing the Azure Monitor Agent only on that WEC server and building a DCR targeting the ForwardedEvents log is the correct, supported way to ingest Windows Security events from isolated systems into Microsoft Sentinel.
+ドメイン
+Collect activity and events in Microsoft Sentinel
+問題2
+不正解
+Contoso Ltd. uses an Azure Key Vault named ContosoKV to store TLS/SSL certificates and API secrets used by production applications. During an internal audit, you discover that a member of the IT team, who has the Key Vault Contributor role assigned, accidentally deleted a critical certificate and then immediately purged it, making it permanently unrecoverable, even though the vault's soft-delete retention period was set to 90 days.
+
+You need to ensure that going forward, deleted secrets, keys, and certificates cannot be permanently purged by anyone until the soft-delete retention period has expired, regardless of the RBAC roles or access policies assigned to users.
+
+You must retain the existing access model and must not change any role assignments.
+
+What should you configure in the Key Vault settings?
+
+Change the Key Vault permission model from Azure RBAC to vault access policies.
+説明
+This answer is incorrect. Switching between Azure RBAC and vault access policies changes how permissions are assigned and evaluated, but it does not, by itself, prevent purging of soft-deleted items. Additionally, the requirement explicitly states that the existing access model and role assignments must not be changed.
+Configure a Key Vault firewall rule to restrict access to trusted networks only.
+説明
+This answer is incorrect. Key Vault firewall settings control network-level access to the vault (for example, restricting access to specific virtual networks or IP ranges) but have no effect on whether an authorized, connected user can purge a soft-deleted secret, key, or certificate.
+正解
+Enable purge protection on the Key Vault.
+説明
+This answer is correct. Purge protection is a Key Vault setting that, once enabled, prevents any user or role, including those with full delete/purge permissions such as Key Vault Contributor, from permanently deleting a soft-deleted object before the retention period expires. This directly addresses the requirement without changing any existing role assignments or access model.
+回答は不正解です
+Increase the soft-delete retention period from 90 days to the maximum of 90 days again to enforce the policy.
+説明
+This answer is incorrect. The soft-delete retention period was already set to 90 days, so setting it again has no effect and does not address the issue. Soft-delete alone only delays deletion; it does not stop someone with purge permissions from immediately purging the object, which is exactly what happened in the scenario.
+全体的な説明
+The scenario tests understanding of two related but distinct Key Vault protections: soft-delete (which retains deleted objects for a recovery window) and purge protection (which enforces that retention window against premature permanent deletion, even by privileged users). Because soft-delete alone did not stop the purge, enabling purge protection is the correct configuration to meet the stated requirement while leaving the access model unchanged.
+ドメイン
+Secure secrets and keys by using Azure Key Vault
+問題3
+不正解
+Contoso Ltd. hosts an Azure SQL Database named ContosoSQL that stores sensitive customer records. The security team creates an Azure Private Link private endpoint for ContosoSQL inside a dedicated subnet of their virtual network and confirms that DNS queries from inside the virtual network resolve the database's fully qualified domain name (FQDN) to the private IP address of the endpoint. Connections from within the virtual network work as expected.
+
+During a security review, the team discovers that ContosoSQL can still be reached directly over the internet using its public endpoint from client IP addresses outside the virtual network, bypassing the private endpoint entirely.
+
+You need to ensure that ContosoSQL can only be accessed through the private endpoint, while preserving the existing private connectivity.
+
+What should you configure?
+
+正解
+On the Azure SQL Database server, set the "Public network access" setting to "Disabled."
+説明
+This answer is correct. Creating a private endpoint does not automatically disable the resource's public endpoint. You must explicitly set "Public network access" to "Disabled" on the Azure SQL Database server to ensure all traffic is forced through the private endpoint, while private connectivity via the private endpoint continues to function normally.
+On the subnet, add a service endpoint for Microsoft.Sql.
+説明
+This answer is incorrect. A service endpoint extends the virtual network identity to the service over the Microsoft backbone but does not disable the public endpoint of the resource, and it is a separate mechanism from Private Link; it would not prevent public internet access to ContosoSQL.
+回答は不正解です
+Deploy Azure Firewall in the virtual network and configure a network rule to block inbound traffic to the SQL server's public IP address.
+説明
+This answer is incorrect. Azure Firewall is designed to control traffic that flows through the virtual network (typically outbound or inter-subnet traffic) and is not positioned to intercept internet clients connecting directly to the database's public endpoint, since that traffic never traverses the firewall.
+On the subnet, configure a network security group (NSG) rule that denies all outbound traffic to the internet.
+説明
+This answer is incorrect. A network security group rule that blocks outbound traffic from the subnet only affects traffic originating from resources inside that subnet; it has no effect on external clients connecting directly to the database's public endpoint over the internet.
+全体的な説明
+Configuring an Azure Private Link private endpoint provides a secure private path to a PaaS resource but does not, by itself, remove the resource's public endpoint. To fully secure access and eliminate the public attack surface, administrators must explicitly disable public network access on the resource (e.g., Azure SQL Database, Storage Account) after the private endpoint is deployed and DNS is configured.
+ドメイン
+Implement security for Azure network services
+問題4
+正解
+Contoso collects Windows Security events from 400 servers into a Microsoft Sentinel workspace using the Azure Monitor Agent. Ingestion cost has risen sharply, and analysis shows that a large share of the volume comes from high-frequency events that Contoso's detections never reference.
+
+The security team wants to keep collecting the specific event IDs used by its analytics rules and stop collecting everything else, without deploying a different agent or editing settings on each individual server.
+
+What should you do?
+
+Configure a workspace-level daily cap on ingestion.
+説明
+This answer is incorrect. A daily cap stops ingestion once the threshold is reached, which creates blind spots for the rest of the day. It limits spend indiscriminately rather than filtering out events that carry no detection value.
+Move the SecurityEvent table to the Auxiliary logs plan.
+説明
+This answer is incorrect. A cheaper table plan changes the cost per gigabyte and the query experience, but the same unnecessary events continue to be collected. It also reduces the analytics capability the team relies on for detections.
+回答は正解です
+Edit the data collection rule associated with the servers and use an XPath query to collect only the required event IDs.
+説明
+This answer is correct. Data collection rules define what the Azure Monitor Agent gathers, and the Windows event log data source accepts XPath expressions that filter by channel and event ID. Because the rule is associated with the machines centrally, updating it changes collection on all 400 servers without touching them individually.
+Reduce the workspace retention period to 30 days.
+説明
+This answer is incorrect. Retention determines how long data is kept after it arrives and is billed separately from ingestion. Shortening it would not reduce the volume of events being ingested each day.
+全体的な説明
+With the Azure Monitor Agent, collection behaviour is defined entirely by data collection rules rather than by settings on the machine. The Windows event log data source inside a rule accepts XPath queries, which can filter by log channel and by specific event IDs so that only events with detection value are transmitted. Because the rule is associated with a scope of machines, a single edit applies across all 400 servers immediately and consistently. Retention changes, table plan changes, and daily caps all act after ingestion has occurred or blunt the data set indiscriminately, so none of them addresses the root cause. Filtering at the rule is the standard cost-optimization technique and preserves the events the analytics rules depend on.
+ドメイン
+Collect activity and events in Microsoft Sentinel
+問題5
+不正解
+Your organization deploys several large language models by using Microsoft Foundry. You configure Azure API Management as an AI Gateway so that all client applications call the models through API Management rather than directly against the Foundry endpoints.
+
+During a security review, you discover that the Foundry resource key is stored as a named value in API Management and is used in policies to authenticate outbound calls from API Management to the Foundry endpoint. You need to eliminate the use of a static resource key for this backend authentication while still allowing API Management to securely call the Foundry endpoint.
+
+What should you do?
+
+回答は不正解です
+Create a Microsoft Entra Conditional Access policy that blocks sign-ins to the Foundry resource from any location other than the API Management instance's public IP address
+説明
+This answer is incorrect. Conditional Access policies govern interactive and some non-interactive user/application sign-ins based on conditions like location, but they do not provide the mechanism for API Management to authenticate outbound calls to a Foundry endpoint without a key.
+Configure mutual TLS (client certificate) authentication between API Management and the Foundry endpoint, and require clients to present a certificate when calling API Management
+説明
+This answer is incorrect. Mutual TLS secures the transport channel and can authenticate clients calling API Management, but it does not address how API Management itself authenticates to the Foundry backend, and Foundry endpoints are not typically configured for client certificate authentication.
+正解
+Enable a system-assigned managed identity on the API Management instance, grant that identity the appropriate role on the Foundry resource, and configure the authentication-managed-identity policy to acquire and forward an access token to the backend
+説明
+This answer is correct. Enabling a system-assigned managed identity on API Management and using the authentication-managed-identity policy lets API Management obtain a Microsoft Entra ID access token at runtime and present it to the Foundry endpoint, removing the need to store or manage a static resource key entirely.
+Store the Foundry resource key as a secret in Azure Key Vault, create a Key Vault-backed named value in API Management, and continue referencing it in the existing policies
+説明
+This answer is incorrect. Moving the key into Key Vault improves secret storage and rotation, but API Management still retrieves and uses the static key value for authentication, so the requirement to eliminate use of a static resource key is not met.
+全体的な説明
+The AI Gateway pattern in API Management supports using the platform's system-assigned managed identity together with the authentication-managed-identity policy to authenticate to backend Azure resources such as Foundry endpoints, removing the need to manage and rotate static API keys. This is the recommended, most secure approach compared to key-based, certificate-based, or Conditional Access-based alternatives, which either still rely on a static secret or do not apply to service-to-service backend authentication.
+ドメイン
+Implement security for AI
+問題6
+不正解
+Your company must comply with a regulatory framework that requires quarterly reviews of the organization's security posture. You have an Azure subscription that contains resources across multiple resource groups. A compliance officer named Priya must be able to view the Microsoft Defender for Cloud regulatory compliance dashboard, secure score, and security recommendations for all resources in the subscription. Priya must NOT be able to modify security policies, apply recommendations, or change any resource configuration.
+
+You need to assign an Azure built-in role to Priya at the subscription scope that meets the requirement while following the principle of least privilege.
+
+Which role should you assign?
+
+回答は不正解です
+Reader
+説明
+This answer is incorrect. Reader provides general read access to resource properties and configurations but does not guarantee visibility into Defender for Cloud-specific data such as the regulatory compliance dashboard and security recommendations, which are exposed through the Security Reader role.
+Security Admin
+説明
+This answer is incorrect. Security Admin includes all Security Reader permissions but also allows the user to modify security policies, dismiss alerts, and apply recommendations, which exceeds the read-only requirement and violates least privilege.
+正解
+Security Reader
+説明
+This answer is correct. The Security Reader built-in role grants read-only access to Microsoft Defender for Cloud, including the secure score, regulatory compliance dashboard, and security recommendations, without permitting any changes to security policies or resource configurations, making it the least-privileged choice.
+Contributor
+説明
+This answer is incorrect. Contributor grants broad read/write access to create, modify, and delete resources across the subscription, far exceeding what is needed and posing a significant security risk given the requirement is view-only.
+全体的な説明
+When assigning Azure built-in roles for governance purposes, administrators should map required permissions precisely to the least privilege necessary. Security Reader is purpose-built to provide visibility into Microsoft Defender for Cloud's security posture data—including compliance dashboards and recommendations—without allowing changes, making it the correct choice for an auditor or compliance reviewer role.
+ドメイン
+Implement governance for security and compliance
+問題7
+正解
+Contoso is delegating identity operations. A platform engineer named Priya must be able to grant and remove Azure role assignments for service principals and managed identities within the Prod-Platform subscription.
+
+Priya must NOT be able to manage Azure Blueprints, delegate the subscription to another tenant, or otherwise administer resources such as virtual machines and storage accounts.
+
+Which built-in Azure role should you assign to Priya at the subscription scope?
+
+User Access Administrator
+説明
+This answer is incorrect. User Access Administrator also manages role assignments, but it carries additional capabilities including Azure Blueprints management and broader access delegation. Those extras are explicitly outside what Priya should hold.
+Owner
+説明
+This answer is incorrect. Owner grants full control of every resource in the subscription in addition to role assignment rights. It vastly exceeds the delegation described and breaks least privilege.
+Contributor
+説明
+This answer is incorrect. Contributor allows full management of resources but expressly excludes creating or removing role assignments. Priya would be able to change infrastructure yet unable to perform the delegation task.
+回答は正解です
+Role Based Access Control Administrator
+説明
+This answer is correct. This role grants permission to create and remove Azure role assignments without granting rights over the resources themselves. Compared with User Access Administrator it deliberately excludes Azure Blueprints management and the ability to elevate access across the tenant.
+全体的な説明
+Azure separates the ability to manage resources from the ability to manage who has access to them, and two built-in roles cover the access-management side. User Access Administrator has been the traditional choice, but it bundles extra capabilities such as Azure Blueprints management and tenant-level access elevation. Role Based Access Control Administrator was introduced as the narrower option, granting only the permissions needed to create and delete role assignments. Because the requirement rules out blueprint management and resource administration, that narrower role is the least-privilege fit. Assignments made by this role can be further constrained with role assignment conditions so that Priya may only grant a specific set of roles.
+ドメイン
+Implement governance for security and compliance
+問題8
+不正解
+You are the Microsoft Entra administrator for Contoso. The company wants to configure a Conditional Access policy for all users accessing Microsoft 365 apps with the following requirements:
+
+- Users who sign in from a device marked as compliant in Microsoft Intune should be granted access without being prompted for multifactor authentication (MFA).
+- Users who sign in from a device that is NOT marked as compliant must complete MFA to be granted access.
+- Both groups of users must ultimately be allowed access; the policy should never block sign-in outright for either group.
+
+You create a Conditional Access policy that targets all users and the Microsoft 365 apps cloud app. Which grant control configuration should you select to meet these requirements?
+
+回答は不正解です
+Select only "Require multifactor authentication" and set the grant control to "Require all the selected controls"
+説明
+This answer is incorrect. This configuration ignores device compliance entirely and forces every user, including those on compliant devices, to complete MFA, which does not meet the requirement to exempt compliant device users from MFA.
+Select both "Require multifactor authentication" and "Require device to be marked as compliant," and set the grant control to "Require all the selected controls"
+説明
+This answer is incorrect. Setting the grant control to "Require all the selected controls" means a user must satisfy BOTH conditions (MFA and compliant device) every time, which would force MFA even on compliant devices, contradicting the requirement that compliant device users be exempt from MFA.
+正解
+Select both "Require multifactor authentication" and "Require device to be marked as compliant," and set the grant control to "Require one of the selected controls"
+説明
+This answer is correct. Selecting "Require one of the selected controls" applies an OR logic: a user on a compliant device satisfies the compliant-device control and is granted access without MFA, while a user on a noncompliant device must satisfy the remaining control (MFA) to gain access. This exactly matches the stated business requirement.
+Select only "Require device to be marked as compliant" and set the grant control to "Require one of the selected controls"
+説明
+This answer is incorrect. Selecting only "Require device to be marked as compliant" provides no alternative control for noncompliant devices, so users on noncompliant devices would be blocked rather than prompted for MFA, violating the requirement that all users must ultimately be granted access.
+全体的な説明
+When a Conditional Access policy includes multiple grant controls, the "Require one of the selected controls" option applies OR logic, allowing access if any single control is satisfied, while "Require all the selected controls" applies AND logic, requiring every control to be met. To satisfy the scenario—exempting compliant devices from MFA while still requiring MFA on noncompliant devices—both controls must be selected together with the OR ("Require one of the selected controls") setting.
+ドメイン
+Secure access to resources by using Microsoft Entra ID
+問題9
+不正解
+Your company uses Azure API Management to expose a backend API named OrdersAPI to external partners. You need to ensure that only calls containing a valid OAuth 2.0 access token issued by Microsoft Entra ID for your registered application are forwarded to the backend service. Calls without a valid token, or with a token issued by an untrusted authority, must be rejected by API Management before reaching the backend.
+
+Which API Management policy should you configure in the inbound processing section of the OrdersAPI policy definition?
+
+正解
+validate-jwt
+説明
+This answer is correct. The validate-jwt policy validates a JWT bearer token in the Authorization header, checking the issuer, audience, signing keys, and expiration against a specified Microsoft Entra ID OpenID configuration endpoint, rejecting the request with a 401 before it reaches the backend if validation fails.
+回答は不正解です
+rate-limit-by-key
+説明
+This answer is incorrect. The rate-limit-by-key policy throttles the number of calls a caller can make within a time period to prevent abuse, but it has no capability to inspect or validate authentication tokens.
+check-header
+説明
+This answer is incorrect. The check-header policy verifies that a specified HTTP header exists and optionally matches expected values, but it does not parse, validate signatures, or verify the issuer/audience claims of a JWT token.
+ip-filter
+説明
+This answer is incorrect. The ip-filter policy restricts or allows access based on the caller's IP address range, which does not address the requirement to validate an OAuth 2.0 token's authenticity or issuer.
+全体的な説明
+To enforce token-based authentication and reject invalid or untrusted tokens at the gateway before requests reach the backend, API Management administrators use the validate-jwt policy, specifying the Microsoft Entra ID tenant's OpenID configuration URL, expected audience, and issuer. This centralizes authentication enforcement at the API Management layer, protecting the backend service from unauthorized calls.
+ドメイン
+Implement security for application platform services
+問題10
+不正解
+Contoso enforces an Azure Policy initiative at the management group scope that denies the creation of storage accounts which allow public blob access. A legacy public-facing product catalogue requires one specific storage account to serve anonymous read traffic, and the architecture board has approved this exception for the next six months while the application is re-engineered.
+
+The exception must apply only to that one storage account, must be visible in compliance reporting as an approved deviation, and must lapse automatically.
+
+What should you do?
+
+Move the storage account to a subscription that is outside the management group.
+説明
+This answer is incorrect. Relocating the resource evades the assignment rather than documenting an approved exception. It also fragments the subscription topology and leaves no compliance record of the deviation.
+Change the policy effect from Deny to Audit at the management group scope.
+説明
+This answer is incorrect. Changing the effect removes enforcement for every resource under the management group, not just the approved one. The organization would silently lose the control it relies on.
+回答は不正解です
+Add a resource lock to the storage account so that the policy cannot modify it.
+説明
+This answer is incorrect. Locks prevent deletion or modification of a resource and have no influence on how Azure Policy evaluates or denies requests. The deny effect would continue to apply.
+正解
+Create a policy exemption for the storage account, scoped to the resource, with a waiver category and an expiration date six months from now.
+説明
+This answer is correct. An exemption suppresses evaluation of the assignment for a single specified resource while leaving enforcement intact everywhere else. Setting the category and an expiration date records the deviation in compliance reporting and causes the exception to lapse automatically on the chosen date.
+全体的な説明
+Azure Policy exemptions exist precisely for approved, time-bounded deviations from an otherwise enforced assignment. An exemption is created at the scope of the resource, resource group, or subscription that needs relief, and it references the specific assignment and optionally the individual policy definitions within an initiative. Choosing the waiver or mitigated category records why the deviation was granted, and the expiration date causes the resource to fall back under enforcement automatically without anyone needing to remember to remove it. Exempted resources appear separately in compliance results, which keeps auditors informed rather than hiding the gap. Weakening the effect or moving the resource would either remove the control broadly or leave no record of the decision.
+ドメイン
+Implement governance for security and compliance
+問題11
+不正解
+A virtual machine named VM1 has a network interface associated with an NSG named NSG1. Application administrators report that VM1 cannot connect outbound to an external SaaS API on TCP port 443, even though NSG1 appears to allow the traffic when viewed in the Azure portal rules list. You need to determine exactly which rule (including any default or platform rule) is actually being applied to the traffic and blocking it, without generating any live test traffic or capturing packets.
+
+Which Azure Network Watcher diagnostic capability should you use?
+
+正解
+IP flow verify
+説明
+This answer is correct. IP flow verify simulates a single packet against every NSG applied to the VM's NIC and subnet as well as any Azure Virtual Network Manager admin rules, without sending real traffic. It returns Access allowed or Access denied together with the name of the security rule responsible, including default rules such as DenyAllOutBound.
+Connection troubleshoot
+説明
+This answer is incorrect. Connection troubleshoot tests actual connectivity between a source and destination by generating live probe traffic and reports latency and hop-by-hop results, which does not meet the requirement of avoiding live test traffic.
+回答は不正解です
+NSG flow logs
+説明
+This answer is incorrect. NSG flow logs record historical allow/deny decisions for actual traffic flows over time for auditing and analysis, but they do not present the aggregated effective rule set and require log data collection and analysis tools rather than an immediate rule evaluation.
+Effective security rules
+説明
+This answer is incorrect for this requirement. Effective security rules shows the aggregated list of NIC-level and subnet-level rules, including defaults, that apply to the network interface, which is useful for understanding why a decision was made. It does not evaluate a specific flow, so it will not tell you which single rule is blocking the outbound call to the SaaS API.
+全体的な説明
+IP flow verify is the Network Watcher capability designed to answer exactly which rule permits or blocks a given flow. You supply direction, protocol, local IP and port, and remote IP and port, and it evaluates all network security groups attached to the NIC and the subnet plus any Virtual Network Manager security admin rules, returning Access denied together with the offending rule name. It is a simulation, so no live traffic is generated and no packets are captured. Effective security rules only lists the aggregated rule set for a NIC, NSG flow logs require real traffic to have occurred, and connection troubleshoot actively tests a connection, so none of them satisfy the stated constraints.
+ドメイン
+Implement security for Azure network services
+問題12
+不正解
+Your organization runs a production workload on an Azure Kubernetes Service (AKS) cluster. During a security review, you discover that several pods are running as privileged containers, and images are being pulled from unapproved public registries. You need to prevent these types of pod specifications from being deployed to the cluster going forward, with enforcement occurring at deployment time (not just after-the-fact detection).
+
+Which AKS security control should you enable to meet this requirement?
+
+Microsoft Defender for Containers vulnerability assessment
+説明
+This answer is incorrect. Microsoft Defender for Containers provides vulnerability assessment and runtime threat detection for images and running workloads, but it does not enforce admission-time restrictions on pod specifications; it primarily generates recommendations and alerts after resources exist.
+回答は不正解です
+Network security groups on the AKS subnet
+説明
+This answer is incorrect. Network security groups control network traffic at the subnet or NIC level based on IP addresses and ports; they have no ability to inspect or block pod specifications such as privileged mode or container image source.
+Kubernetes role-based access control (RBAC) for cluster users
+説明
+This answer is incorrect. Kubernetes RBAC controls which users or service accounts can perform actions (such as create, update, delete) on Kubernetes resources, but it does not evaluate or restrict the content of a pod specification, such as privilege escalation settings or image registry source.
+正解
+Azure Policy Add-on for AKS (Gatekeeper-based admission control)
+説明
+This answer is correct. The Azure Policy Add-on for AKS deploys Gatekeeper (an admission controller based on Open Policy Agent) that evaluates pod specifications against assigned Azure Policy definitions before they are admitted to the cluster, allowing you to block privileged containers or disallow images from unapproved registries at deployment time.
+全体的な説明
+Enforcing security baselines on pod specifications in AKS (such as disallowing privileged containers or restricting allowed image registries) at admission time requires the Azure Policy Add-on for AKS, which uses Gatekeeper to evaluate and block non-compliant deployments before they run. Other controls like Defender for Containers, NSGs, and Kubernetes RBAC serve different security purposes and do not provide admission-time enforcement of pod-level configuration policies.
+ドメイン
+Implement security for application platform services
+問題13
+不正解
+Contoso assigns the Privileged Role Administrator and Global Administrator roles through two Microsoft Entra ID groups. An audit requires that every member of these groups be re-attested by the group owner every 90 days, that any member whose access is not approved be removed automatically, and that members whose reviewer does not respond before the deadline also be removed.
+
+Contoso has Microsoft Entra ID Governance licensing available.
+
+What should you configure?
+
+Privileged Identity Management role settings that require approval for activation.
+説明
+This answer is incorrect. Activation approval controls how a role is elevated at the moment of use. It does not periodically re-attest who is eligible for the role in the first place.
+Microsoft Entra Permissions Management
+説明
+This answer is incorrect. Permissions Management analyses granted versus used permissions across cloud platforms and recommends right-sizing. It does not run a recurring human attestation cycle with automatic removal of unapproved members.
+回答は不正解です
+A Conditional Access policy that requires reauthentication every 90 days for privileged users.
+説明
+This answer is incorrect. Reauthentication frequency governs how often a user proves their identity during sign-in. It has no relationship to reviewing or revoking role or group membership.
+正解
+A recurring access review on each group, with the group owner as reviewer, auto-apply of results enabled, and the action for reviewers who do not respond set to remove access.
+説明
+This answer is correct. Access reviews create the recurring attestation cycle the audit requires and can name the group owner as the reviewer. Enabling auto-apply removes denied members without administrator action, and setting the no-response behaviour to remove access covers reviewers who miss the deadline.
+全体的な説明
+Access reviews in Microsoft Entra ID Governance are designed for exactly this recurring attestation pattern and can target group membership, application assignments, or role eligibility. When creating the review you choose the reviewer, which can be the group owner, a named set of users, or the members themselves, and you set the recurrence to match the audit cadence. Auto-apply is the setting that removes denied members automatically once the review closes, without waiting for an administrator to action the results. A separate setting defines what happens to members whose reviewer never responded, and choosing to remove access satisfies the second half of the requirement. Permissions Management, Privileged Identity Management activation settings, and Conditional Access address related but distinct governance problems.
+ドメイン
+Implement governance for security and compliance
+問題14
+正解
+Contoso has published several Microsoft Copilot Studio agents that employees use to interact with internal knowledge bases and generative AI responses. The security team wants Microsoft to inspect user prompts and tool invocations while a session is running, and to block a tool invocation before it executes when the request shows signs of direct or indirect prompt injection, unsafe tool use or data exfiltration, rather than reviewing the activity afterwards in audit logs.
+
+Which action should the security team perform to meet this requirement?
+
+回答は正解です
+Turn on real-time protection during agent runtime for Copilot Studio agents in Microsoft Defender for Cloud Apps, and have a Power Platform administrator complete the matching external threat detection onboarding using the same Microsoft Entra application ID
+説明
+This answer is correct. Real-time protection during agent runtime routes every Copilot Studio tool invocation through Microsoft Defender for inspection before it runs, and blocks the invocation, notifies the user and raises a Defender XDR alert when the prompt is judged suspicious. Enabling it requires configuration in the Defender portal plus matching onboarding in Power Platform using the same Entra app ID.
+Enable a Microsoft Purview Insider Risk Management policy that monitors Copilot Studio agent usage and generates alerts for review by an analyst
+説明
+This answer is incorrect. Insider Risk Management produces alerts for analyst review after the activity happens and is scoped to human user risk, so it provides no in-session blocking of agent behaviour.
+Register the Copilot Studio agent as an app connector in Microsoft Defender for Cloud Apps and review the generated activity logs on a scheduled basis
+説明
+This answer is incorrect. Registering the agent as an app connector only yields activity logs that are reviewed after the fact, which is precisely the reactive approach the team wants to move away from.
+Create a Microsoft Purview Data Loss Prevention (DLP) policy for Power Platform that restricts connectors used by the Copilot Studio agents
+説明
+This answer is incorrect. A Power Platform DLP policy governs which connectors an agent may use at design time; it cannot inspect the content of a live prompt or block an individual tool invocation at runtime.
+全体的な説明
+Real-time protection during agent runtime is the Microsoft Defender for Cloud Apps capability built specifically for low-code agents created in Microsoft Copilot Studio. Once enabled, every tool invocation an agent makes is routed to Defender's inspection endpoint before it executes, and if the prompt or parameters look malicious the invocation is blocked, the user is told their message was blocked, and an alert surfaces in Defender XDR incidents and alerts. Enabling it is a two-sided task: turn on the setting in the Defender portal and have a Power Platform administrator complete the external threat detection onboarding using the same Microsoft Entra application ID. Power Platform DLP, Insider Risk Management and app connector activity logs all operate at design time or after the fact and cannot stop an action mid-session.
+ドメイン
+Implement security for AI
+問題15
+正解
+An application stores an RSA key named app-signing-key in an Azure key vault. Contoso's cryptographic standard requires that the key be rotated automatically every 12 months without any administrator action, and that the platform team receive a notification 30 days before the key's expiry date so they can validate that consuming applications pick up the new version.
+
+What should you configure on the key vault?
+
+回答は正解です
+A key rotation policy on app-signing-key that rotates the key every 12 months, together with a near-expiry event notification delivered through Azure Event Grid.
+説明
+This answer is correct. A key rotation policy is defined per key and instructs Key Vault to generate a new key version automatically on the schedule you specify. Key Vault also publishes near-expiry events to Azure Event Grid, so a subscription on that event can notify the platform team ahead of the expiry date.
+An Azure Policy assignment that audits keys older than 12 months.
+説明
+This answer is incorrect. An audit policy reports on keys that have exceeded the age threshold after the fact. It neither rotates the key nor warns the team in advance of expiry.
+Purge protection with a 90-day soft-delete retention period.
+説明
+This answer is incorrect. Purge protection prevents permanent deletion of vault objects during the retention window. It plays no part in generating new key versions or in producing expiry notifications.
+An Azure Automation runbook scheduled annually that creates a new key version.
+説明
+This answer is incorrect. A runbook can technically create key versions, but it duplicates a native Key Vault feature and adds credentials, code, and failure modes to maintain. It also provides no near-expiry notification without further custom development.
+全体的な説明
+Azure Key Vault supports rotation policies at the level of an individual key, which define both the rotation interval and the expiry time for each generated version. When the policy fires, Key Vault creates a new version of the key while retaining previous versions, so applications referencing the versionless key identifier pick up the new material automatically. Key Vault also emits lifecycle events to Azure Event Grid, including a near-expiry event that can be configured to fire a set number of days before expiry and routed to email, Logic Apps, or a webhook. Together these two features satisfy the standard without any scheduled scripts or manual intervention. Purge protection and audit policies address deletion resilience and reporting respectively, neither of which performs rotation.
+ドメイン
+Secure secrets and keys by using Azure Key Vault
+問題16
+正解
+A company runs workloads on both Microsoft Azure and Amazon Web Services (AWS). The security team wants to onboard the AWS account to Microsoft Defender for Cloud so they can enable Defender for Servers and Defender for Containers on the AWS resources. The company's security policy states that Defender for Cloud must never store long-term AWS access keys or secret keys, and that any AWS IAM permissions granted to Defender for Cloud must be assumed temporarily through a trust relationship.
+
+You need to configure the AWS connector in Defender for Cloud to meet this requirement.
+
+Which action should you perform when creating the connector?
+
+Install the Azure Arc agent on every AWS EC2 instance and connect each instance individually to Microsoft Entra ID.
+説明
+This answer is incorrect. While Azure Arc-enabled servers can be used to onboard individual AWS EC2 instances for certain scenarios, this is not the mechanism used to connect an entire AWS account and its IAM permissions to Defender for Cloud, and it does not address the credential/trust requirement described.
+回答は正解です
+Deploy the AWS CloudFormation template provided by Defender for Cloud, which creates an IAM role with a trust policy that allows Defender for Cloud to assume the role using federated credentials.
+説明
+This answer is correct. Defender for Cloud's native multicloud connector for AWS uses a CloudFormation template to deploy an IAM role with a trust policy that establishes federated (OIDC-based) access, allowing Defender for Cloud to assume the role temporarily without storing static credentials.
+Manually create an AWS IAM user with programmatic access, generate an access key and secret key, and enter these credentials into the Defender for Cloud environment settings.
+説明
+This answer is incorrect. Using an IAM access key and secret key requires storing long-term credentials in Defender for Cloud, which directly violates the requirement to avoid persistent AWS credentials. This was the legacy method and is not the recommended or default approach for the native connector.
+Configure Microsoft Entra ID Connect Cloud Sync to synchronize AWS IAM roles and users into Microsoft Entra ID.
+説明
+This answer is incorrect. Microsoft Entra Connect Cloud Sync is used for hybrid identity synchronization between on-premises directories and Microsoft Entra ID; it has no role in connecting AWS accounts to Defender for Cloud or managing AWS IAM trust relationships.
+全体的な説明
+Connecting AWS to Defender for Cloud through the native connector involves deploying a CloudFormation template that creates an IAM role with a trust policy enabling Defender for Cloud to assume the role via federated credentials, eliminating the need to store long-term access keys. This approach aligns with least-privilege and secure onboarding practices for multicloud environments in Defender for Cloud.
+ドメイン
+Manage security posture by using Defender for Cloud
+問題17
+不正解
+Contoso Ltd. has three Azure subscriptions: Development, Test, and Production. The security team must ensure that the same set of Azure Policy definitions—including definitions that require encryption at rest and restrict allowed resource locations—are consistently applied across all three subscriptions. The team requires that policy changes be tracked in version control, peer-reviewed before deployment, and automatically deployed to all subscriptions whenever a change is approved. Manual configuration through the Azure portal is not acceptable for compliance audit purposes.
+
+You need to implement a solution that meets these requirements by using infrastructure as code.
+
+What should you do?
+
+In Microsoft Defender for Cloud, review the regulatory compliance dashboard for each subscription and manually apply the "Quick Fix" remediation actions for any policy identified as noncompliant.
+説明
+This answer is incorrect. The Defender for Cloud regulatory compliance dashboard helps identify and remediate noncompliant resources reactively, but it is not a mechanism for authoring, version-controlling, or consistently deploying policy definitions as code across subscriptions.
+回答は不正解です
+Configure the required policies manually in the Azure portal for each subscription, then export the settings to PowerShell Desired State Configuration (DSC) scripts and store the scripts in a document library for audit reference.
+説明
+This answer is incorrect. Manually configuring policies in the portal does not meet the infrastructure as code requirement, and DSC scripts are designed for configuring operating system state on virtual machines, not for defining or deploying Azure Policy definitions and assignments.
+正解
+Author the Azure Policy definitions and assignments as Bicep templates stored in a Git repository, and configure an Azure DevOps pipeline that runs Azure Resource Manager deployment commands to deploy the templates to each subscription after a pull request is approved.
+説明
+This answer is correct. Defining policy definitions and assignments as Bicep code in a Git repository, combined with a pipeline that enforces peer review and automated deployment, satisfies all the stated requirements: version control, change approval, and consistent, repeatable deployment across subscriptions using infrastructure as code.
+Create an Azure Automation runbook that contains PowerShell commands to assign the policies, and have a compliance analyst manually run the runbook against each subscription before each audit cycle.
+説明
+This answer is incorrect. While Automation runbooks can execute PowerShell, requiring a manual trigger before each audit cycle does not provide the automated, approval-gated deployment on change that the scenario requires, and it does not inherently provide version control of the policy definitions themselves.
+全体的な説明
+Implementing security controls by using infrastructure as code means defining Azure Policy definitions and assignments in template files (such as Bicep or ARM JSON) that are stored in source control and deployed through an automated CI/CD pipeline, ensuring consistency, auditability, and repeatable governance across environments. Option 1 is the only choice that fully satisfies the version control, approval, and automated deployment requirements described in the scenario.
+ドメイン
+Implement governance for security and compliance
+問題18
+不正解
+Contoso's compliance team must be able to demonstrate, for any given month, which users ran prompts in Microsoft Security Copilot, when they ran them, and which plugins were invoked. The evidence must come from a tamper-resistant, centrally retained log rather than from screenshots of the Security Copilot session history.
+
+Where should the compliance team retrieve this activity record?
+
+正解
+Microsoft Purview Audit, searching for Security Copilot activities.
+説明
+This answer is correct. Security Copilot writes user activity, including prompt submissions and plugin invocations, into the Microsoft Purview unified audit log. Compliance teams can search that log by user, activity, and date range, and export the results as evidence with tenant-level retention applied.
+The session history pane inside the Security Copilot portal.
+説明
+This answer is incorrect. Session history is scoped to what an individual user or workspace member can see and is intended for operational continuity. It is not a retained, exportable compliance record covering all users.
+回答は不正解です
+The Azure activity log for the resource group containing the Security Compute Units.
+説明
+This answer is incorrect. The Azure activity log records control-plane operations such as provisioning or changing capacity resources. It does not record prompt submissions or plugin invocations inside Security Copilot.
+A Microsoft Sentinel data connector for Security Copilot usage metrics.
+説明
+This answer is incorrect. Usage metrics describe capacity consumption rather than who performed which action. Auditable user activity for Security Copilot is surfaced through the unified audit log rather than a metrics feed.
+全体的な説明
+Security Copilot participates in the Microsoft Purview unified audit log in the same way as other Microsoft 365 and security workloads. Prompt submissions, session activity, and plugin invocations are recorded as audit events attributed to the user who performed them, with a timestamp and relevant details. Compliance staff search these events by activity type, user, and date range in Purview Audit, and can export the results for an evidence package. Retention follows the tenant's audit retention configuration, which makes the record durable and centrally governed rather than dependent on portal session history. The Azure activity log and capacity metrics cover infrastructure and consumption respectively and cannot answer who ran which prompt.
+ドメイン
+Implement Microsoft Security Copilot
+問題19
+不正解
+A security administrator at a company that has deployed multiple AI agents built with Microsoft Copilot Studio and Azure AI Foundry needs to assess the potential impact of a compromised agent identity. Each agent is registered with an Entra Agent ID and has been granted various permissions to Microsoft Graph, connectors, and downstream data sources. The administrator wants to use Microsoft Defender XDR to visualize the full "blast radius" of a specific AI agent identity — including which resources, data sources, plugins, and other identities it can reach or influence if compromised — so that overly permissive access can be remediated before an incident occurs.
+
+Which Defender XDR capability should the administrator use to perform this analysis?
+
+Cloud app discovery reports in Microsoft Defender for Cloud Apps
+説明
+This answer is incorrect. Cloud app discovery in Microsoft Defender for Cloud Apps identifies shadow IT and unsanctioned SaaS usage based on network traffic logs, but it does not model AI agent identity permission graphs or attack paths tied to Entra Agent ID.
+回答は不正解です
+The risky sign-ins report in Microsoft Entra ID Protection
+説明
+This answer is incorrect. The risky sign-ins report focuses on authentication risk signals such as anonymous IP addresses or impossible travel, not on mapping the resources and data an AI agent identity could access if compromised.
+User and entity behavior analytics (UEBA) in Microsoft Sentinel
+説明
+This answer is incorrect. UEBA in Microsoft Sentinel detects anomalous user and entity behavior patterns over time, which is useful for detecting suspicious activity, but it does not provide a graphical blast radius or attack path mapping of an AI agent's permissions and connected resources.
+正解
+Microsoft Security Exposure Management attack paths and AI agent exposure insights
+説明
+This answer is correct. Microsoft Security Exposure Management within Defender XDR includes dedicated AI agent exposure insights and attack path analysis that map an Entra Agent ID's permissions, connected resources, and relationships to other identities, allowing analysts to visualize and quantify the blast radius of a potential compromise.
+全体的な説明
+Analyzing blast radius for Entra Agent ID risks requires visibility into the relationships, permissions, and connected resources associated with an AI agent identity, which is precisely what Microsoft Security Exposure Management's attack path and exposure insights provide within Defender XDR. The other options address different security scenarios, such as shadow IT discovery, behavioral anomaly detection, or sign-in risk, none of which model the interconnected exposure of an AI agent identity.
+ドメイン
+Implement security for AI
+問題20
+不正解
+Contoso requires every resource group in its Azure estate to carry a CostCenter tag so that chargeback reporting is accurate. You must author a single custom Azure Policy definition that:
+
+- Adds the CostCenter tag with the value inherited from the parent subscription when a resource group is created without it, rather than blocking the creation.
+- Can bring existing untagged resource groups into compliance through a remediation task after the definition is assigned.
+
+Which policy effect should you configure in the definition?
+
+回答は不正解です
+Append
+説明
+This answer is incorrect. Append adds a field or tag during the create or update request only, and it cannot be used with remediation tasks. Existing non-compliant resource groups would stay untagged.
+DeployIfNotExists
+説明
+This answer is incorrect. DeployIfNotExists deploys a related resource, such as a diagnostic setting or an extension, when one is missing. It is not used to alter a property or tag on the evaluated resource itself.
+正解
+Modify
+説明
+This answer is correct. Modify adds, replaces, or removes properties and tags on the resource itself, and it is the effect designed for tag governance. Modify assignments support remediation tasks, which is how previously created resource groups are brought into compliance.
+Deny
+説明
+This answer is incorrect. Deny blocks the request outright when the condition is not met, which contradicts the requirement that creation must succeed. It also performs no correction of existing resources.
+全体的な説明
+Azure Policy offers several corrective effects, and choosing between them depends on whether you are changing the resource itself or deploying something alongside it. Modify operates on the evaluated resource's own properties and tags, which makes it the standard effect for tag inheritance and tag enforcement scenarios. Because Modify assignments run under a managed identity, they can execute remediation tasks that apply the change to resources created before the assignment existed. DeployIfNotExists shares that remediation capability but targets a separate related resource rather than a property on the evaluated one. Append is limited to the request path at create or update time and offers no remediation, while Deny blocks creation entirely and therefore fails the stated requirement.
+ドメイン
+Implement governance for security and compliance
+問題21
+不正解
+Contoso Ltd. has a single Azure subscription that contains 60 storage accounts. The security team wants to enable Microsoft Defender for Storage—including malware scanning and sensitive data threat detection—for only one storage account named storesensitive01, which contains regulated customer data. They do not want the plan enabled on any of the other 59 storage accounts, and they want to minimize cost while still meeting this requirement.
+
+What should the security team do in Microsoft Defender for Cloud?
+
+正解
+Enable the Microsoft Defender for Storage plan directly on the storesensitive01 storage account at the resource level, while leaving the plan disabled at the subscription level.
+説明
+This answer is correct. Microsoft Defender for Storage supports being enabled at the individual resource (storage account) level independently of the subscription-level setting, allowing granular, per-account protection without incurring costs or enabling scanning on other storage accounts in the subscription.
+Enable the Microsoft Defender for Servers plan on the virtual network associated with storesensitive01, and configure a custom recommendation to enable malware scanning.
+説明
+This answer is incorrect. Microsoft Defender for Servers protects virtual machines and servers, not storage accounts, and it has no capability to enable malware scanning or sensitive data threat detection for storage resources.
+Enable the Microsoft Defender for Storage plan at the subscription level, and then configure a cost management budget that limits scanning charges to storesensitive01 only.
+説明
+This answer is incorrect. Cost management budgets only provide spending alerts and do not control which resources are actually scanned; enabling the plan at the subscription level would still apply protection (and generate charges) across all 60 storage accounts.
+回答は不正解です
+Enable the Microsoft Defender for Storage plan at the subscription level, and then create an Azure Policy exemption for the 59 storage accounts that should not be protected.
+説明
+This answer is incorrect. Enabling the plan at the subscription level would apply protection (and cost) to all storage accounts by default, and Azure Policy exemptions are not the mechanism used within Defender for Cloud to scope Defender for Storage protection to specific resources.
+全体的な説明
+Microsoft Defender for Storage can be configured at both the subscription level and the individual resource level, giving administrators flexibility to enable protection selectively. In this scenario, enabling the plan directly on storesensitive01 at the resource level satisfies the requirement to protect only that account while avoiding unnecessary cost and scanning on the other 59 storage accounts.
+ドメイン
+Manage security posture by using Defender for Cloud
+問題22
+不正解
+Your organization has enabled Defender Cloud Security Posture Management (Defender CSPM) on its Azure subscription. A security engineer wants Defender CSPM to identify plaintext secrets (such as API keys and connection strings) stored on Azure virtual machine disks so that findings can be reviewed and the secrets migrated to Azure Key Vault.
+
+What should the security engineer do to enable this capability?
+
+Install the Azure Monitor Log Analytics agent on every virtual machine and enable the Key Vault diagnostic logs data collection rule.
+説明
+This answer is incorrect. The Log Analytics agent is used for other monitoring and data collection scenarios, but it is not the mechanism Defender CSPM uses for agentless secrets scanning, and Key Vault diagnostic logs only capture access events, not plaintext secrets on disk.
+回答は不正解です
+Create a Microsoft Purview sensitivity label for "Confidential – Secrets" and apply it to files stored on the virtual machines.
+説明
+This answer is incorrect. Microsoft Purview sensitivity labels classify and protect documents and emails based on data classification policies; they do not scan for or detect hardcoded secrets like API keys or connection strings on virtual machines.
+Enable the Microsoft Defender for Key Vault plan on the subscription and configure access policies for each key vault.
+説明
+This answer is incorrect. Microsoft Defender for Key Vault protects against anomalous or malicious access attempts to existing key vaults; it does not scan virtual machine disks for exposed plaintext secrets, which is the function of Defender CSPM's agentless secret scanning.
+正解
+In Microsoft Defender for Cloud, under Environment settings, open the Defender CSPM plan settings and turn on Agentless scanning for machines, which includes machine secrets scanning
+説明
+This answer is correct. Machine secrets scanning is one of the agentless machine scanning capabilities and becomes available once agentless scanning is turned on in Defender CSPM or Defender for Servers Plan 2. Agentless scanning is enabled or disabled as a whole; its individual capabilities cannot be toggled separately.
+全体的な説明
+Agentless machine secrets scanning takes snapshots of VM disks and analyses them out of band to locate plaintext secrets such as API keys, connection strings and SSH private keys, with no agent installed and no impact on VM performance. It is one of the capabilities of agentless machine scanning, which is enabled from the Defender CSPM or Defender for Servers Plan 2 plan settings under Environment settings; the individual capabilities cannot be turned on or off separately. Findings appear as Defender for Cloud recommendations and feed attack path analysis, which is what lets the team prioritise moving those secrets into Azure Key Vault. The retired Log Analytics agent, the Defender for Key Vault plan and Purview sensitivity labels address entirely different problems and none of them inspect VM disks for plaintext secrets.
+ドメイン
+Secure secrets and keys by using Azure Key Vault
+問題23
+不正解
+Contoso runs a compliance reporting tool that must inventory every key vault in the tenant, listing the names, expiry dates, and enabled state of the secrets, keys, and certificates each vault contains. The report is used to identify objects that are about to expire.
+
+The tool authenticates with a managed identity. Security policy states that the tool must never be able to retrieve the value of a secret or key, and the vaults use the Azure role-based access control permission model.
+
+Which built-in role should you assign to the managed identity?
+
+正解
+Key Vault Reader
+説明
+This answer is correct. Key Vault Reader allows reading the properties and metadata of the vault and of the secrets, keys, and certificates within it, including names, expiry dates, and enabled state. It deliberately excludes access to secret and key values, which is what the policy requires.
+回答は不正解です
+Key Vault Secrets User
+説明
+This answer is incorrect. Key Vault Secrets User is specifically the role that grants read access to secret values. Assigning it would give the reporting tool exactly the capability the policy prohibits.
+Key Vault Certificates Officer
+説明
+This answer is incorrect. Certificates Officer grants full management of certificate objects, including creating and deleting them, and it is limited to certificates. It is both too broad for a reporting tool and too narrow for an inventory that spans secrets and keys.
+Reader
+説明
+This answer is incorrect. The generic Reader role covers management-plane properties of the vault resource itself. It does not extend to enumerating the objects stored inside the vault under the RBAC permission model.
+全体的な説明
+Key Vault's RBAC roles distinguish between reading an object's metadata and reading its value, which is what makes an inventory scenario like this one solvable without granting secret access. Key Vault Reader covers listing and reading properties across secrets, keys, and certificates, so expiry dates and enabled state are available to the reporting tool. Because the role stops short of the get-value operations, a compromise of the tool's identity would not expose credential material. The generic Azure Reader role operates only on the management plane and does not enumerate vault contents when RBAC is the permission model. Roles such as Secrets User or Certificates Officer either grant value access or grant management rights that a read-only report has no need for.
+ドメイン
+Secure secrets and keys by using Azure Key Vault
+問題24
+不正解
+Contoso must ensure that secrets in the key vault ContosoOpsKV are retrievable only from resources inside the hub virtual network. The security standard states that the vault's data plane must not be reachable from any public IP address, including addresses on Contoso's own corporate ranges, and that applications must continue to use the standard vault URL in their configuration.
+
+What should you configure?
+
+回答は不正解です
+Add a virtual network service endpoint for Microsoft.KeyVault on the hub subnet and set the vault firewall to deny by default.
+説明
+This answer is incorrect. A service endpoint keeps traffic on the Azure backbone and restricts access to the selected subnet, but the vault retains a public endpoint and public IP address. Some standards accept this design, but it does not satisfy the requirement that the data plane not be publicly reachable.
+正解
+Create a private endpoint for ContosoOpsKV in the hub virtual network, disable public network access, and link the privatelink.vaultcore.azure.net private DNS zone.
+説明
+This answer is correct. The private endpoint gives the vault a private IP address inside the hub virtual network, and disabling public network access removes the internet-facing data plane entirely. Linking the privatelink.vaultcore.azure.net zone lets the standard vault URL resolve to that private address, so application configuration does not change.
+Set the vault firewall to allow only Contoso's corporate public IP ranges.
+説明
+This answer is incorrect. An IP allow list still exposes the vault's data plane on a public endpoint and simply filters the sources permitted to reach it. The standard requires that no public address be able to reach the vault at all.
+Enable the Allow trusted Microsoft services to bypass this firewall option on the vault.
+説明
+This answer is incorrect. The trusted services bypass permits specific Azure platform services to reach the vault despite firewall rules. It widens access rather than removing public reachability and does nothing for the hub virtual network requirement.
+全体的な説明
+Key Vault offers three network models: open with firewall rules, service endpoints, and private endpoints. Only the private endpoint model removes the public data plane, because the vault is projected into the virtual network as a network interface with a private IP address. Disabling public network access is a distinct setting and must be applied alongside the private endpoint, otherwise the public endpoint remains live in parallel. Linking the privatelink.vaultcore.azure.net private DNS zone to the virtual network is what allows the existing vault URL to resolve to the private address, which keeps application configuration unchanged. Service endpoints and IP allow lists are lighter-weight designs but both leave a public endpoint in place, so they fail the stated standard.
+ドメイン
+Secure secrets and keys by using Azure Key Vault
+問題25
+正解
+A cloud security analyst at Contoso must answer an ad hoc question raised by the risk committee: which internet-exposed virtual machines have a managed identity that holds write permissions on a storage account containing data classified as sensitive?
+
+Contoso has Defender Cloud Security Posture Management enabled. The analyst wants to answer this question by building and refining a query interactively against the cloud security graph, rather than working through a fixed list of prioritized risks.
+
+Which Defender for Cloud capability should the analyst use?
+
+Attack path analysis
+説明
+This answer is incorrect. Attack path analysis presents a curated set of prioritized, pre-computed paths that Defender for Cloud has identified as exploitable. It answers what the platform considers risky rather than letting the analyst pose an arbitrary question of their own.
+Secure score
+説明
+This answer is incorrect. Secure score aggregates recommendation health into a single measure of posture over time. It cannot express relationships between compute, identity, and data resources.
+回答は正解です
+Cloud security explorer
+説明
+This answer is correct. Cloud security explorer lets you build queries directly against the cloud security graph, combining resource type, exposure, identity, permission, and data sensitivity conditions. That interactive query model is what makes ad hoc questions like this one answerable and refinable.
+Regulatory compliance dashboard
+説明
+This answer is incorrect. The compliance dashboard scores resources against control frameworks such as PCI DSS or ISO 27001. It reports control pass and fail states and does not support relationship queries across resources.
+全体的な説明
+Defender Cloud Security Posture Management builds a cloud security graph that connects resources, network exposure, identities, permissions, vulnerabilities, and data sensitivity. Two features consume that graph in different ways. Attack path analysis surfaces pre-computed, prioritized chains that Defender for Cloud judges to be exploitable, which is ideal for driving remediation work. Cloud security explorer exposes the same graph as an interactive query builder, so an analyst can express a specific question, inspect the results, and refine the conditions. Because the risk committee asked a bespoke question that no pre-computed path is guaranteed to cover, the explorer is the right tool, and any query built there can be saved and reused later.
+ドメイン
+Manage security posture by using Defender for Cloud

@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "UserProgress": {
+      "title": "UserProgress",
+      "description": "Cross-device cloud save state for a user's SC-500 quiz progress, study round, cumulative per-question attempt stats, bookmarks, and language preference.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user who owns this progress document.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studyRound": {
+          "type": "integer",
+          "description": "Current study lap/round number (1周目, 2周目, etc.)."
+        },
+        "lang": {
+          "type": "string",
+          "description": "Preferred UI language.",
+          "enum": ["ja", "en"]
+        },
+        "userRecords": {
+          "type": "object",
+          "description": "Map of questionId to current-round UserAnswerRecord."
+        },
+        "questionStats": {
+          "type": "object",
+          "description": "Map of questionId to cumulative QuestionAttemptStats (attempts, corrects, lastAttemptedAt)."
+        },
+        "bookmarkedIds": {
+          "type": "array",
+          "description": "Bounded list of bookmarked question IDs."
+        },
+        "roundHistory": {
+          "type": "array",
+          "description": "Bounded list of completed RoundSummary objects."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the document was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the document was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "studyRound",
+        "lang",
+        "userRecords",
+        "questionStats",
+        "bookmarkedIds",
+        "roundHistory",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/userProgress/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProgress"
+      },
+      "description": "Stores each authenticated user's synced SC-500 learning progress keyed by their Firebase Auth UID."
+    }
+  }
+}

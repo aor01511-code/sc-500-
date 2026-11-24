@@ -1,0 +1,590 @@
+問題1不正解
+Contoso Ltd. operates an Azure Storage account (contosouploads) that receives files uploaded by external partners through a web application. The security team wants to configure Microsoft Defender for Storage so that every file is automatically scanned for malicious content immediately after it is uploaded, and any malicious file triggers a security alert in Microsoft Defender for Cloud. The team also wants to set a monthly capacity limit (in GB) on how much data is scanned to control costs.
+
+Which Defender for Storage capability should you configure to meet these requirements?
+正解
+Malware Scanning (on-upload)
+説明
+This answer is correct. Malware Scanning in Defender for Storage uses the Microsoft Defender Antimalware engine to scan blobs near real-time as they are uploaded, generates security alerts for detected malware, and allows administrators to configure a monthly capacity (GB) limit for scanning to manage costs.
+Sensitive Data Threat Detection
+説明
+This answer is incorrect. Sensitive Data Threat Detection identifies when sensitive data (such as classified by Microsoft Purview) is exposed or accessed suspiciously, but it does not scan file content for malware and has no per-file malicious content detection capability.
+回答は不正解です
+Activity Monitoring
+説明
+This answer is incorrect. Activity Monitoring analyzes control-plane and data-plane operations (such as unusual access patterns, permission changes, or exfiltration attempts) to detect anomalous behavior, but it does not perform content-level malware scanning of uploaded files.
+Microsoft Defender for Cloud regulatory compliance assessments
+説明
+This answer is incorrect. Regulatory compliance assessments in Microsoft Defender for Cloud evaluate resources against compliance standards and benchmarks; they are unrelated to malware detection or file scanning capabilities.
+全体的な説明
+Malware Scanning is the specific Defender for Storage feature that scans uploaded blobs using the Microsoft Defender Antimalware engine, raises alerts on detection, and supports configuring a monthly GB scanning cap for cost control—directly matching all the stated requirements. The other options address different threat scenarios (sensitive data exposure, anomalous activity, or compliance) and do not perform malware scanning.
+ドメイン
+Implement security for storage accounts
+問題2正解
+Contoso Ltd. has a Consumption-plan Azure Logic App that starts with a Request (HTTP) trigger. The workflow is called by a partner organization's application to submit purchase orders. The security team has the following requirements:
+
+- Calls to the Logic App must be authenticated using the partner's Microsoft Entra ID app registration.
+- The Logic App must validate that the caller presents a valid OAuth bearer token issued by Microsoft Entra ID before the workflow runs.
+- The built-in SAS-based trigger URL should no longer be sufficient on its own to invoke the workflow.
+
+You need to configure the Logic App to meet these requirements with the least administrative effort.
+
+What should you do?
+Configure an IP-based access restriction on the Logic App's Access control (CORS/IP) settings to allow only the partner's public IP range.
+説明
+This answer is incorrect. IP restrictions limit which network locations can reach the Logic App endpoint, but they do not validate identity or require an OAuth token, so they do not meet the requirement to authenticate the caller via Microsoft Entra ID.
+Enable a system-assigned managed identity on the Logic App and grant it the Logic App Contributor role.
+説明
+This answer is incorrect. A system-assigned managed identity is used so the Logic App can authenticate to other Azure resources when making outbound calls; it does not validate inbound callers or enforce authentication on the Request trigger itself.
+Create an API connection to Microsoft Entra ID and use it as an action immediately after the Request trigger to validate the caller's token.
+説明
+This answer is incorrect. There is no action that validates an inbound bearer token this way, and adding an action after the trigger would not prevent unauthenticated requests from reaching and executing the trigger itself; authentication must be enforced on the trigger before the run starts.
+回答は正解です
+On the Request trigger, configure Azure Active Directory Open Authentication (Microsoft Entra ID authentication) and specify the allowed tenant, audience, and issuer values.
+説明
+This answer is correct. Logic Apps (Consumption) support configuring Microsoft Entra ID authentication directly on the Request trigger, which requires callers to present a valid OAuth bearer token from Microsoft Entra ID and lets you restrict access by tenant, audience, and issuer, replacing reliance on the SAS-based URL alone.
+全体的な説明
+To require Microsoft Entra ID–based authentication for callers of an HTTP-triggered Logic App, you configure Azure Active Directory Open Authentication directly on the Request trigger, specifying the expected tenant, audience, and issuer. This ensures only requests with a valid Entra ID token are accepted, superseding reliance on the SAS-protected trigger URL alone.
+ドメイン
+Implement security for application platform services
+問題3不正解
+Contoso's legal team opens an investigation into a departing employee. As part of the matter, legal must retrieve the prompts that the employee submitted to Microsoft 365 Copilot and the responses Copilot returned over the past six months, and must preserve those items so they cannot be deleted while the matter is open.
+
+Which Microsoft Purview capability should the legal team use?
+Insider Risk Management
+説明
+This answer is incorrect. Insider Risk Management scores risky user behaviour and generates alerts for investigation triage. It does not produce a defensible, preservable collection of a specific user's Copilot content.
+回答は不正解です
+Data Security Posture Management (DSPM) for AI
+説明
+This answer is incorrect. DSPM for AI provides aggregated visibility into AI usage patterns, risky prompts, and oversharing risk across the organization. It is a posture and reporting tool and does not collect, export, or preserve one individual's interactions for a legal matter.
+Communication Compliance
+説明
+This answer is incorrect. Communication Compliance evaluates messages against policies to detect inappropriate or non-compliant communication. It is a detection workflow rather than a legal collection and preservation mechanism.
+正解
+eDiscovery, searching the employee's mailbox for Copilot interaction records and applying a hold
+説明
+This answer is correct. Microsoft 365 Copilot prompts and responses are retained as items in the user's mailbox, which makes them discoverable through Purview eDiscovery searches. Creating a case, running a search across that location, and applying a hold both retrieves the interactions and preserves them for the duration of the matter.
+全体的な説明
+Microsoft 365 Copilot interactions are stored as records in the mailbox of the user who made them, which places them inside the same compliance boundary as email and Teams content. That storage model is what allows Purview eDiscovery to search for a specific user's prompts and responses, review them within a case, and export them. Applying a hold to the location within the case prevents deletion for as long as the matter remains open, satisfying the preservation requirement. DSPM for AI, Insider Risk Management, and Communication Compliance each analyse AI or user activity for security and policy purposes, but none of them provides legal collection and preservation. Audit log search is a useful companion for establishing when interactions occurred, though it does not preserve the content itself.
+ドメイン
+Implement security for AI
+問題4正解
+Your organization has enabled Microsoft 365 Copilot for all employees. Several business users have created and published declarative agents using Copilot Studio, and these agents now appear in the Microsoft 365 admin center under the Copilot workload.
+
+During a routine review, the security team discovers that an agent named "Expense Helper" has been granted access to a SharePoint site containing confidential HR data, which is outside its intended scope. You need to immediately prevent all users in the organization from running this specific agent while continuing to allow all other published agents to function normally, and you want to accomplish this with the least administrative effort.
+
+What should you do?
+In the Power Platform admin center, disable the environment that hosts all Copilot Studio agents for the organization.
+説明
+This answer is incorrect. Disabling the Power Platform environment would affect every app, flow, and agent hosted in that environment, not just the single problematic agent, making it an overly broad and disruptive action.
+In the Microsoft 365 admin center, navigate to Settings > Org settings > Copilot, and disable Microsoft 365 Copilot for the entire organization.
+説明
+This answer is incorrect. Disabling Copilot for the entire organization would remove access to all agents and Copilot functionality for every user, which is far broader than required and would significantly disrupt productivity for unrelated business processes.
+In Microsoft Entra ID, locate the enterprise application associated with the agent and delete the application registration.
+説明
+This answer is incorrect. Deleting the enterprise application registration could break other integrations tied to that identity and is a destructive, irreversible action rather than a controlled way to disable a single agent's use across the organization; it also is not the recommended mechanism for managing agent availability.
+回答は正解です
+In the Microsoft 365 admin center, go to Agents > All agents, select the Expense Helper agent, and apply the Block action for the whole organization.
+説明
+This answer is correct. The agent registry in the Microsoft 365 admin center lists every shared agent in the tenant and exposes governance actions including Block and Unblock, applied per agent. Blocking a Copilot Studio agent removes it from Microsoft Copilot and the other host products without affecting any other agent.
+全体的な説明
+Shared Copilot agents, including those built in Copilot Studio and Agent Builder, appear in the agent registry in the Microsoft 365 admin center under Agents > All agents. Administrators can search the registry and use the per-agent lifecycle actions to block or unblock a specific agent for the entire organization, which is the least-effort way to stop one agent while leaving every other agent running. Disabling Microsoft 365 Copilot org-wide or disabling the whole Power Platform environment would take down far more than the single problematic agent. Deleting the underlying Entra application registration is destructive, is not the documented governance control, and can break other dependencies.
+ドメイン
+Implement security for AI
+問題5正解
+You are the Microsoft Entra ID administrator for a company that has a Microsoft Entra ID P2 license. The company uses Microsoft Entra ID Protection to calculate risk scores for user sign-ins.
+
+You need to configure a Conditional Access policy that meets the following requirement: users must complete multifactor authentication (MFA) only when Microsoft Entra ID Protection classifies the individual sign-in attempt as medium or high risk. Sign-ins classified as low risk must NOT be challenged for MFA.
+
+What should you configure in the Conditional Access policy?
+Under Conditions, set the "User risk" condition to Medium and High, and under Grant, select "Require multifactor authentication."
+説明
+This answer is incorrect. "User risk" reflects the probability that a specific user's identity has been compromised, based on signals aggregated over time (such as leaked credentials), not the risk of an individual sign-in event. Using User risk would evaluate a different signal than what the scenario describes and could produce different enforcement behavior than intended.
+回答は正解です
+Under Conditions, set the "Sign-in risk" condition to Medium and High, and under Grant, select "Require multifactor authentication."
+説明
+This answer is correct. The "Sign-in risk" condition in Conditional Access is populated by Microsoft Entra ID Protection and reflects the real-time risk level of a specific sign-in attempt (for example, anonymous IP address, atypical travel, or unfamiliar sign-in properties). Setting this condition to Medium and High, combined with a Require MFA grant control, exactly matches the requirement to challenge only risky sign-ins with MFA.
+Under Session, configure "Sign-in frequency" to reauthenticate every time risk is detected, and under Grant, select "Require multifactor authentication."
+説明
+This answer is incorrect. Sign-in frequency is a session control that governs how often a user must reauthenticate; it does not evaluate or filter by a specific risk level (low/medium/high) and therefore cannot be used by itself to ensure MFA is triggered only for medium or high risk sign-ins.
+Under Conditions, set the "Insider risk" condition to Medium and High, and under Grant, select "Require multifactor authentication."
+説明
+This answer is incorrect. There is no "Insider risk" condition available in Conditional Access policies; insider risk is a separate capability delivered through Microsoft Purview Insider Risk Management and is not a Conditional Access signal that can be combined with sign-in risk levels.
+全体的な説明
+Conditional Access integrates with Microsoft Entra ID Protection through two distinct risk-based conditions: Sign-in risk (per-session risk) and User risk (cumulative identity compromise risk). Because the requirement is to act on the risk of the individual sign-in attempt, the Sign-in risk condition set to Medium and High, paired with
+ドメイン
+Secure access to resources by using Microsoft Entra ID
+問題6正解
+Contoso has already onboarded 120 on-premises Windows and Linux servers to Azure Arc, and Microsoft Defender for Servers Plan 2 is enabled. The operations team must now apply approved operating system updates to those servers on the second Saturday of each month between 01:00 and 05:00, and must be able to report on which machines are missing updates between those windows.
+
+The solution must use native Azure capabilities and must cover the Arc-enabled servers and the Azure virtual machines in the same way.
+
+What should you configure?
+回答は正解です
+Azure Update Manager with periodic assessment enabled on the machines and a scheduled patching maintenance configuration for the monthly window.
+説明
+This answer is correct. Periodic assessment makes each machine report its update compliance on a recurring basis, which provides the reporting the team needs between windows. A maintenance configuration with a schedule defines the recurring Saturday window and applies the approved updates to both Arc-enabled servers and Azure virtual machines.
+An Azure Automation runbook that invokes the operating system update command on each machine on a schedule.
+説明
+This answer is incorrect. A custom runbook recreates functionality Azure Update Manager already provides, including compliance reporting and reboot handling. It also adds ongoing script maintenance for two different operating systems.
+A Microsoft Defender for Cloud recommendation-based remediation task for missing system updates.
+説明
+This answer is incorrect. Defender for Cloud surfaces recommendations about missing updates but does not schedule and apply patches within a defined maintenance window. It reports the gap rather than closing it.
+Azure Policy with a DeployIfNotExists effect that installs the Azure Monitor Agent on every machine.
+説明
+This answer is incorrect. Installing an agent is at most a prerequisite step and performs no patching. Azure Update Manager also does not depend on the Azure Monitor Agent to assess or install updates.
+全体的な説明
+Azure Update Manager is the native service for assessing and installing operating system updates, and it treats Arc-enabled servers and Azure virtual machines through the same interface. Periodic assessment is the setting that makes each machine re-evaluate its update status on a regular cadence so that compliance reporting stays current between patch runs. Scheduled patching is expressed as a maintenance configuration, which carries the recurrence, the window length, and the classifications of updates to install. Defender for Cloud can surface the resulting compliance gap as a recommendation, but it does not perform scheduled installation itself. Custom runbooks and agent-deployment policies either duplicate the service or address an unrelated prerequisite.
+ドメイン
+Implement security for servers and virtual machines (VMs)
+問題7正解
+Your organization has deployed Microsoft Security Copilot. You need to assign a role to a new SOC analyst named Priya so that she can run prompts, review generated results, and create promptbooks within Security Copilot sessions. Priya must NOT be able to modify plugin settings, change the assigned compute capacity, or manage role assignments for other users in Security Copilot.
+
+Which Security Copilot role should you assign to Priya?
+Security Copilot Owner
+説明
+This answer is incorrect. The Security Copilot Owner role is designed for users who need full administrative control, including managing plugins, capacity, and assigning roles to other users. Assigning this role to Priya would give her more permissions than required, violating the principle of least privilege.
+回答は正解です
+Security Copilot Contributor
+説明
+This answer is correct. The Security Copilot Contributor role allows users to run prompts, review results, and create or manage promptbooks and sessions, but it does not grant permissions to modify plugin settings, change capacity, or manage role assignments. This matches exactly the access level Priya needs.
+Security Administrator
+説明
+This answer is incorrect. Security Administrator is a Microsoft Entra ID role used to manage security configurations across Microsoft security products, but it is not one of the two dedicated Security Copilot roles (Owner or Contributor) that govern access within the Security Copilot experience itself.
+Global Administrator
+説明
+This answer is incorrect. Global Administrator is a Microsoft Entra ID role that grants tenant-wide administrative access across all Microsoft services, far exceeding what is needed for Priya's task and is not the appropriate role-based access control mechanism specific to Security Copilot.
+全体的な説明
+Security Copilot uses two dedicated roles—Security Copilot Owner and Security Copilot Contributor—to control access within the service. The Owner role manages capacity, plugins, and role assignments, while the Contributor role is limited to using the tool (running prompts, sessions, and promptbooks) without administrative control, making it the correct fit for Priya's requirements.
+ドメイン
+Implement Microsoft Security Copilot
+問題8正解
+Your company has a Microsoft Entra tenant and an Azure subscription that contains 200 Azure virtual machines (VMs). You are configuring Microsoft Defender for Cloud for the subscription.
+
+You need to ensure that all Azure VMs receive the following capabilities:
+- Vulnerability assessment scanning
+- Just-in-time VM access
+- File integrity monitoring
+- Automatic deployment of the Microsoft Defender for Endpoint sensor
+
+You must enable this functionality with the least amount of manual configuration and use built-in Defender for Cloud capabilities.
+
+What should you do?
+In Defender for Cloud, go to Environment settings for the subscription, enable the Defender for Servers plan, select Plan 1, and turn on the extension for Microsoft Defender for Endpoint.
+説明
+This answer is incorrect. Defender for Servers Plan 1 only provides integration with Microsoft Defender for Endpoint and basic threat detection; it does not include vulnerability assessment, just-in-time VM access, or file integrity monitoring, so it does not meet all the stated requirements.
+In Microsoft Sentinel, create a data connector for the Azure Activity log and enable the built-in analytics rule for VM threat detection.
+説明
+This answer is incorrect. Microsoft Sentinel data connectors and analytics rules provide SIEM detection and investigation capabilities but do not enable the workload protection features (vulnerability scanning, JIT access, file integrity monitoring, or MDE sensor deployment) that are configured through Defender for Cloud's Defender for Servers plan.
+回答は正解です
+In Defender for Cloud, go to Environment settings for the subscription, enable the Defender for Servers plan, select Plan 2, and turn on the associated extensions for Microsoft Defender for Endpoint and agentless/vulnerability assessment.
+説明
+This answer is correct. Microsoft Defender for Servers Plan 2 is the plan that includes the full feature set: vulnerability assessment (via the integrated agentless or Microsoft Defender vulnerability management scanner), just-in-time VM access, file integrity monitoring, and automatic deployment of the Microsoft Defender for Endpoint sensor. Enabling Plan 2 at the subscription level and turning on the relevant extensions in Environment settings delivers all required capabilities with minimal manual configuration.
+In Microsoft Defender for Cloud Apps, connect the Azure subscription as an app and enable Conditional Access App Control for all VMs.
+説明
+This answer is incorrect. Microsoft Defender for Cloud Apps and Conditional Access App Control are used for SaaS application discovery and session control, not for protecting Azure VM workloads or enabling vulnerability assessment and JIT access.
+全体的な説明
+Enabling and correctly configuring the Microsoft Defender for Servers Plan 2 plan in Defender for Cloud's Environment settings is the single action that activates vulnerability assessment, just-in-time VM access, file integrity monitoring, and automatic Microsoft Defender for Endpoint sensor deployment for Azure VMs. Other options either provide a subset of features (Plan 1) or belong to unrelated services (Defender for Cloud Apps, Microsoft Sentinel) that do not deliver workload protection for VMs.
+ドメイン
+Manage security posture by using Defender for Cloud
+問題9正解
+You are the security administrator for a Microsoft Entra ID tenant. Users currently can consent to any third-party application that requests permissions. Following a review, you must implement a new policy that meets these requirements:
+
+- Users can grant consent themselves only if the application was published by a verified publisher AND requests only permissions that your security team has classified as low risk.
+- Any consent request that does not meet both conditions must be forwarded to an administrator for approval.
+- Existing functionality for approved low-risk scenarios must continue to work without administrator intervention.
+
+What should you configure in Microsoft Entra ID to meet these requirements?
+Create a Conditional Access policy that blocks access to the Microsoft Entra admin center for all users except administrators, and rely on default consent settings.
+説明
+This answer is incorrect. Blocking access to the admin center does not control OAuth consent behavior for applications and has no effect on how users consent to app permissions. This option does not address the stated requirements at all.
+Set the user consent setting to "Do not allow user consent," and enable the admin consent workflow so that all requests are routed to reviewers.
+説明
+This answer is incorrect. Setting user consent to "Do not allow user consent" removes the ability for users to consent to any application, which contradicts the requirement that users be able to self-consent to verified, low-risk apps. This forces every request through the admin consent workflow, adding unnecessary administrative overhead.
+回答は正解です
+Set the user consent setting to "Allow user consent for apps from verified publishers, for selected permissions," and add the approved low-risk permissions to a permission classification labeled "Low."
+説明
+This answer is correct. The "Allow user consent for apps from verified publishers, for selected permissions" setting lets users consent only when both conditions (verified publisher and specific permissions) are met, and permission classifications let you define exactly which permissions count as "Low" risk. Requests that don't meet these criteria are automatically blocked from user consent and can be routed through the admin consent workflow.
+Set the user consent setting to "Allow user consent for apps," and configure the admin consent workflow to notify administrators of every new consent request.
+説明
+This answer is incorrect. "Allow user consent for apps" permits users to consent to any app regardless of publisher verification or permission risk level, which does not meet the requirement to restrict self-consent to verified publishers and low-risk permissions only. Notifying admins of every request also defeats the goal of avoiding unnecessary admin intervention for approved scenarios.
+全体的な説明
+Microsoft Entra ID allows granular control of user consent through the "Allow user consent for apps from verified publishers, for selected permissions" setting combined with permission classifications (Low, Medium, High). This combination lets organizations empower users to self-service consent for trusted, low-risk scenarios while ensuring all other requests are escalated through the admin consent workflow, satisfying both security and usability requirements.
+ドメイン
+Secure access to resources by using Microsoft Entra ID
+問題10正解
+You are the security administrator for Contoso Ltd. Microsoft Defender for Cloud generates the recommendation "Management ports of virtual machines should be closed" for several VMs in a virtual network named VNet1. Currently, RDP (port 3389) is open to the internet on public IP addresses assigned to the VMs.
+
+You plan to remediate this finding by deploying Azure Bastion so that administrators can connect to the VMs securely through the Azure portal without exposing RDP or SSH ports to the internet, and without keeping public IP addresses on the VMs.
+
+You need to prepare VNet1 to support the Azure Bastion deployment.
+
+Which action should you perform?
+Create a subnet named BastionSubnet with a minimum size of /24 in VNet1.
+説明
+This answer is incorrect. The subnet must be named exactly "AzureBastionSubnet," not "BastionSubnet." While /24 would satisfy the minimum size requirement, the incorrect subnet name means Azure Bastion deployment would fail validation.
+Create a subnet named GatewaySubnet with a minimum size of /26 in VNet1.
+説明
+This answer is incorrect. "GatewaySubnet" is the required subnet name for VPN Gateway or ExpressRoute Gateway deployments, not for Azure Bastion. Using this name would not satisfy Azure Bastion's naming requirement.
+回答は正解です
+Create a subnet named AzureBastionSubnet with a minimum size of /26 in VNet1.
+説明
+This answer is correct. Azure Bastion requires a dedicated subnet that must be named exactly "AzureBastionSubnet" and must have a minimum prefix size of /26 to accommodate the Bastion host's scaling and management requirements.
+Create a subnet named AzureBastionSubnet with a minimum size of /29 in VNet1.
+説明
+This answer is incorrect. The subnet name "AzureBastionSubnet" is correct, but /29 is too small; Azure Bastion requires a minimum of /26 to support the required number of IP addresses for host instances and scale units.
+全体的な説明
+When planning an Azure Bastion deployment to eliminate the need for public IP addresses and open management ports on VMs, you must create a dedicated subnet named exactly "AzureBastionSubnet" with a minimum size of /26. Getting either the name or the minimum size wrong will prevent successful deployment, making Option 1 the only fully compliant choice.
+ドメイン
+Implement security for servers and virtual machines (VMs)
+問題11正解
+A company stores sensitive customer documents in Azure Blob Storage within a storage account named "contosodocs". The security team discovers that several blob containers have been individually configured to allow anonymous public read access, exposing sensitive data to the internet. The security team wants to ensure that no blob container in this storage account can ever be configured for anonymous public access, regardless of how individual container-level settings are configured by data owners in the future.
+
+Which setting should the security team configure to meet this requirement?
+Generate a shared access signature (SAS) token with read-only permissions for all client applications
+説明
+This answer is incorrect. A SAS token controls delegated access for specific clients with defined permissions and expiration, but it does nothing to prevent containers from being configured for anonymous public access. SAS tokens are a separate access mechanism unrelated to blocking public container settings.
+Enable "Secure transfer required" on the storage account
+説明
+This answer is incorrect. "Secure transfer required" enforces the use of HTTPS (and SMB encryption) for data in transit, protecting data from interception on the network, but it has no effect on whether a container can be configured for anonymous public read access.
+回答は正解です
+Set "Allow Blob public access" to Disabled at the storage account level
+説明
+This answer is correct. The "Allow Blob public access" setting at the storage account level acts as a master switch; when disabled, it overrides any container-level anonymous access configuration, ensuring that no container can be set to allow public access even if a data owner attempts to enable it later.
+Assign the Azure RBAC role "Storage Blob Data Reader" to all users who need access
+説明
+This answer is incorrect. Assigning Azure RBAC roles controls access for authenticated Microsoft Entra identities, but it does not prevent a container from being independently configured to allow anonymous (unauthenticated) public access, since that setting operates outside of RBAC.
+全体的な説明
+The storage account-level "Allow Blob public access" setting is the definitive control point for preventing anonymous public access to blob data; when disabled, it takes precedence over any individual container's public access configuration, providing a tenant/account-wide guardrail. The other options address different security concerns—data-in-transit encryption, delegated temporary access, or authenticated access control—none of which prevent public anonymous access at the container level.
+ドメイン
+Implement security for storage accounts
+問題12正解
+Contoso Ltd. uses Azure Container Registry (ACR) named contosoacr to store container images that are deployed to an Azure Kubernetes Service (AKS) cluster. The security team wants any new container image pushed to the registry to be automatically scanned for known vulnerabilities, with the scan results surfaced as security recommendations in Microsoft Defender for Cloud. No additional scanning tools should need to be installed or managed by the team.
+
+Which action should you take to meet this requirement?
+Configure an ACR firewall rule to allow access only from the AKS cluster's subnet.
+説明
+This answer is incorrect. Firewall rules restrict network access to the registry from specific IP ranges or virtual networks, which is a network security control, but they have no effect on scanning images for vulnerabilities.
+Enable customer-managed keys to encrypt the contents of contosoacr at rest.
+説明
+This answer is incorrect. Customer-managed keys provide control over the encryption keys used to protect registry data at rest, addressing data protection requirements, but they do not scan images or generate vulnerability recommendations.
+回答は正解です
+Enable the Microsoft Defender for Containers plan in Microsoft Defender for Cloud for the subscription that contains contosoacr.
+説明
+This answer is correct. Enabling the Microsoft Defender for Containers plan extends vulnerability scanning to images stored in Azure Container Registry, automatically triggering scans when new images are pushed and surfacing results as recommendations in Microsoft Defender for Cloud without requiring separate scanning infrastructure.
+Enable content trust on contosoacr and require all images to be signed before they can be pulled.
+説明
+This answer is incorrect. Content trust ensures that only images signed by trusted publishers can be pulled, which helps with image integrity, but it does not perform vulnerability scanning or report findings to Microsoft Defender for Cloud.
+全体的な説明
+To automatically scan container images in Azure Container Registry for vulnerabilities and have findings appear as recommendations in Microsoft Defender for Cloud, you must enable the Microsoft Defender for Containers plan. The other options address different aspects of ACR security (image signing, network isolation, and encryption at rest) but do not provide vulnerability scanning capabilities.
+ドメイン
+Implement security for application platform services
+問題13正解
+Your organization deploys large language models through Microsoft Foundry and exposes them to internal developers using an AI Gateway built with Azure API Management. You need to configure a policy that throttles usage based on the number of prompt and completion tokens consumed by each subscription key, rather than the number of API calls, to control cost overruns from the Azure OpenAI Service backend.
+
+Which Azure API Management policy should you configure?
+回答は正解です
+azure-openai-token-limit
+説明
+This answer is correct. The azure-openai-token-limit policy is purpose-built for AI Gateway scenarios in Azure API Management and enforces limits based on prompt and completion tokens returned by the Azure OpenAI Service backend, not just the number of requests, making it the correct choice for controlling token-based cost overruns.
+rate-limit-by-key
+説明
+This answer is incorrect. The rate-limit-by-key policy throttles based on the number of calls made within a time window per subscription key, but it has no awareness of token consumption within the request or response payload, so it cannot control costs driven by token usage.
+ip-filter
+説明
+This answer is incorrect. The ip-filter policy restricts or allows access based on the caller's IP address range and is unrelated to usage throttling or token consumption; it addresses network-level access control, not cost or token governance.
+quota-by-key
+説明
+This answer is incorrect. The quota-by-key policy enforces a longer-term call volume or bandwidth quota (for example, calls per month) per subscription key, but like rate-limit-by-key it does not inspect or throttle based on the number of tokens processed by the language model.
+全体的な説明
+When configuring an AI Gateway in Azure API Management for Microsoft Foundry backends, the azure-openai-token-limit policy is specifically designed to parse token usage from Azure OpenAI Service responses and enforce limits per key, subscription, or other identifiers, enabling fine-grained cost and abuse control that generic call-based or network-based policies cannot provide.
+ドメイン
+Implement security for AI
+問題14正解
+Contoso Ltd. uses Azure Virtual WAN with two virtual hubs that connect several branch offices and virtual networks across two Azure regions. The security team wants to centrally inspect and secure both internet-bound traffic and traffic that passes between branch offices (branch-to-branch traffic) as it transits each virtual hub. The solution must allow security policies to be managed centrally from a single location and must use native Azure Virtual WAN capabilities rather than requiring manual route table changes on each connection.
+
+What should you configure to meet these requirements?
+Deploy a third-party network virtual appliance in each spoke virtual network and configure user-defined routes manually on every connection
+説明
+This answer is incorrect. This approach requires manual route configuration on every connection, which directly contradicts the requirement to avoid manual route table changes, and third-party NVAs deployed per spoke do not provide the centralized, native Virtual WAN security integration described.
+回答は正解です
+Deploy Azure Firewall in each virtual hub to create secured virtual hubs, and use Azure Firewall Manager to configure routing intent and security policies
+説明
+This answer is correct. Azure Firewall Manager allows you to convert a Virtual WAN virtual hub into a secured virtual hub by deploying Azure Firewall directly in the hub, and routing intent lets you centrally direct both internet and private (branch-to-branch) traffic through the firewall for inspection without manually configuring route tables on every connection.
+Configure Network Security Groups on every virtual network connected to the Virtual WAN hubs and manage them individually
+説明
+This answer is incorrect. NSGs operate at the subnet or NIC level within individual virtual networks and cannot provide centralized, hub-level inspection of internet or inter-branch traffic across a Virtual WAN deployment, nor do they offer the centralized policy management the requirement specifies.
+Create a separate hub virtual network with Azure Firewall deployed, and peer it to each Virtual WAN virtual hub
+説明
+This answer is incorrect. Deploying Azure Firewall in a separate hub VNet and peering it to the Virtual WAN hub is a hub-and-spoke pattern used outside Virtual WAN; it does not leverage native secured virtual hub functionality and Virtual WAN hubs cannot be peered to external VNets in this manner for centralized routing intent.
+全体的な説明
+Securing an Azure Virtual WAN deployment centrally is achieved by converting virtual hubs into secured virtual hubs using Azure Firewall Manager, then applying routing intent so both internet and private traffic are automatically routed through Azure Firewall for inspection. This native integration eliminates the need for manual route table management and provides a single pane of glass for security policy administration across all hubs.
+ドメイン
+Implement security for Azure network services
+問題15不正解
+Your company uses Azure Firewall Standard to control outbound traffic from a virtual network containing several Windows Server virtual machines. The virtual machines must be allowed to synchronize time by contacting a specific external NTP server using the fully qualified domain name (FQDN) time.contoso-partner.com over UDP port 123. The external partner has stated that the IP address of this NTP server changes periodically without notice, so filtering by IP address is not acceptable.
+
+You need to configure Azure Firewall to allow this traffic using the FQDN, while blocking all other outbound traffic on UDP port 123.
+
+What should you do?
+Create an application rule that specifies time.contoso-partner.com as the target FQDN, with UDP as the protocol and port 123.
+説明
+This answer is incorrect. Azure Firewall application rules only support FQDN filtering for HTTP, HTTPS, and MSSQL traffic; they cannot be used to filter arbitrary protocols like UDP on port 123, so an application rule would not work for this NTP scenario.
+回答は不正解です
+Create a network rule using the current IP address of time.contoso-partner.com as the destination, with UDP as the protocol and port 123, and update the rule periodically.
+説明
+This answer is incorrect. Filtering by a static IP address would break as soon as the partner's NTP server IP address changes, and manually updating firewall rules to track a changing IP is unreliable and not a supported dynamic approach in Azure Firewall.
+Add a built-in FQDN tag for the required NTP service to an application rule, and set the protocol to UDP port 123.
+説明
+This answer is incorrect. FQDN tags are predefined groups of FQDNs maintained by Microsoft for specific well-known services (such as Windows Update or App Service), and there is no FQDN tag for a custom third-party NTP server; FQDN tags are also used only within application rules, which do not support UDP/123.
+正解
+Enable DNS proxy on the firewall, and then create a network rule that specifies the FQDN time.contoso-partner.com as the destination, with UDP as the protocol and port 123.
+説明
+This answer is correct. Network rules in Azure Firewall support FQDN filtering only for network rules when DNS proxy is enabled on the firewall; once enabled, the firewall resolves the FQDN and dynamically updates the allowed IP addresses, which is required here because network rules (not application rules) support arbitrary protocols and ports such as UDP/123.
+全体的な説明
+Azure Firewall network rules support FQDN filtering for any protocol (including UDP) only when DNS proxy is enabled, allowing the firewall to resolve FQDNs and dynamically maintain the correct destination IP addresses. Application rules, by contrast, are restricted to HTTP, HTTPS, and MSSQL traffic, making them unsuitable for NTP (UDP/123) traffic in this scenario.
+ドメイン
+Implement security for Azure network services
+問題16不正解
+A company's Security Operations Center uses Microsoft Sentinel. An analyst creates a Logic App playbook that automatically disables a user's account in Microsoft Entra ID whenever it is triggered. The analyst wants this playbook to run automatically whenever a Microsoft Sentinel incident is generated by the analytics rule named "Impossible travel activity" with a severity of High.
+
+The analyst creates an automation rule with a trigger of "When incident is created," a condition that checks the analytics rule name and severity, and an action to run a playbook. However, when configuring the "Run playbook" action, the newly created playbook does not appear in the list of available playbooks.
+
+What is the most likely reason the playbook is not listed?
+正解
+The playbook was built using the Microsoft Sentinel alert trigger instead of the Microsoft Sentinel incident trigger, so it is not compatible with automation rules.
+説明
+This answer is correct. Automation rules in Microsoft Sentinel can only run playbooks that use the "Microsoft Sentinel incident" trigger (Azure Logic Apps trigger: "When a response to an Azure Sentinel incident is triggered"). Playbooks built with the older alert trigger will not appear in the automation rule's "Run playbook" list because they are not compatible with the incident-based automation rule action.
+The Microsoft Sentinel Automation Contributor role must be assigned to the analyst's own user account rather than to the Microsoft Sentinel service principal.
+説明
+This answer is incorrect. The Microsoft Sentinel Automation Contributor role must be granted to the Microsoft Sentinel service principal (Azure Security Insights) on the resource group containing the playbook, not to the analyst's personal user account. While missing this role assignment can prevent a playbook from running successfully, it does not typically cause the playbook to be absent from the selection list—an incompatible trigger type does.
+Automation rules can only invoke playbooks that are associated with scheduled analytics rules, not with incidents created manually or through other rule types.
+説明
+This answer is incorrect. Automation rules can run playbooks for incidents generated by any analytics rule type, including scheduled, NRT, and Microsoft security analytics rules, as well as for incidents created or updated through other means. There is no restriction limiting playbook execution to only scheduled analytics rule incidents.
+回答は不正解です
+The playbook is deployed in a different Log Analytics workspace than the one used by Microsoft Sentinel, and playbooks must reside in the same workspace as the Sentinel instance.
+説明
+This answer is incorrect. There is no requirement that a playbook reside in the same Log Analytics workspace as Microsoft Sentinel; playbooks are Logic Apps resources that exist independently in a resource group/subscription and are simply invoked by Sentinel. Workspace co-location is not a factor in whether a playbook appears in the automation rule dropdown.
+全体的な説明
+For a playbook to be selectable within a Microsoft Sentinel automation rule, it must use the "Microsoft Sentinel incident" trigger, since automation rules operate on incidents rather than individual alerts. Playbooks built with the alert trigger are designed for use with analytics rule alert automation configurations (a legacy mechanism) and will not appear as options in automation rule actions.
+ドメイン
+Collect activity and events in Microsoft Sentinel
+問題17不正解
+Contoso operates a production Azure Kubernetes Service (AKS) cluster with Microsoft Entra ID integration enabled for user authentication. The security team wants to grant a group of developers read-only access to pods and deployments within the "billing" namespace only. They want to manage this access entirely by assigning Azure roles to a Microsoft Entra ID security group, without creating or maintaining any Kubernetes Role or RoleBinding objects inside the cluster.
+
+Which AKS authorization feature should you enable to meet this requirement?
+Conditional Access policies scoped to the AKS API server application
+説明
+This answer is incorrect. Conditional Access policies control sign-in conditions (such as requiring MFA or compliant devices) for authenticating to the AKS API server, but they do not define what actions an authenticated identity can perform on Kubernetes resources like pods or deployments.
+回答は不正解です
+The Azure Policy Add-on for AKS with a built-in policy initiative
+説明
+This answer is incorrect. The Azure Policy Add-on for AKS is used to enforce governance and compliance rules (such as requiring resource limits or blocking privileged containers) via Gatekeeper/OPA constraints, not to grant granular, namespace-scoped read/write permissions to users or groups.
+正解
+Azure RBAC for Kubernetes Authorization
+説明
+This answer is correct. Azure RBAC for Kubernetes Authorization allows administrators to manage both authentication and authorization for Kubernetes resources entirely through Azure role assignments (such as "Azure Kubernetes Service RBAC Reader") scoped to a namespace, assigned directly to a Microsoft Entra ID group, eliminating the need to create Kubernetes Role or RoleBinding objects inside the cluster.
+Kubernetes RBAC with Microsoft Entra ID-integrated ClusterRoleBindings
+説明
+This answer is incorrect. While Microsoft Entra ID integration handles authentication, standard Kubernetes RBAC still requires creating and maintaining Role/RoleBinding or ClusterRole/ClusterRoleBinding objects inside the cluster to define authorization, which contradicts the requirement to manage access exclusively through Azure role assignments.
+全体的な説明
+Azure RBAC for Kubernetes Authorization extends Microsoft Entra ID integration by letting administrators assign built-in or custom Azure roles, scoped to specific namespaces, directly to Entra ID users or groups, fully replacing the need for native Kubernetes RoleBindings. This is the correct feature to enable when an organization wants unified, Azure-native access management for AKS resources.
+ドメイン
+Implement security for application platform services
+問題18不正解
+Contoso Ltd. runs a fleet of Linux virtual machines (VMs) in Azure that process regulated financial data. The security team has the following requirements:
+
+- Encryption must occur inside the guest operating system using DM-Crypt.
+- The VMs must authenticate to Microsoft Entra ID to retrieve encryption secrets from an Azure Key Vault.
+- Administrators must be able to verify encryption status from within the guest OS itself.
+- The solution must support encrypting both the OS disk and any attached data disks.
+
+Which encryption solution should you implement to meet these requirements?
+Encryption at host
+説明
+This answer is incorrect. Encryption at host encrypts data on the host machine, including temporary disks and caches, using either platform-managed or customer-managed keys, but it does not use DM-Crypt inside the guest OS and cannot be verified from within the VM. It is complementary to, but not a substitute for, guest-OS-based disk encryption.
+正解
+Azure Disk Encryption
+説明
+This answer is correct. Azure Disk Encryption (ADE) uses BitLocker for Windows and DM-Crypt for Linux to encrypt disks from inside the guest OS, and it requires the VM to authenticate to Microsoft Entra ID to access encryption keys/secrets stored in Azure Key Vault. Because encryption happens within the guest OS, administrators can query encryption status from inside the VM, and it supports both OS and data disks.
+回答は不正解です
+Server-side encryption with platform-managed keys
+説明
+This answer is incorrect. Server-side encryption with platform-managed keys encrypts data at the storage layer transparently, using keys fully managed by Microsoft, with no guest OS involvement and no Microsoft Entra ID authentication from the VM. It cannot be verified from inside the guest OS because the guest OS has no visibility into this encryption process.
+Server-side encryption with customer-managed keys
+説明
+This answer is incorrect. Server-side encryption with customer-managed keys also encrypts at the storage layer (outside the guest OS) using keys stored in Key Vault, but the disk encryption service (not the VM itself) authenticates to Key Vault, and there is no DM-Crypt or in-guest verification mechanism. This does not meet the guest-OS-based encryption requirement.
+全体的な説明
+Azure Disk Encryption is the correct choice because it is the only solution that performs encryption inside the guest OS (via BitLocker/DM-Crypt), requires the VM to authenticate to Microsoft Entra ID to retrieve keys from Key Vault, and allows encryption status to be verified from within the guest OS on both OS and data disks. Server-side encryption options and encryption at host operate at the storage/host layer and do not meet the guest-OS visibility and Microsoft Entra ID authentication requirements described.
+ドメイン
+Implement security for servers and virtual machines (VMs)
+問題19不正解
+Your company has a custom line-of-business application that generates security-relevant events in a proprietary JSON format. You need to ingest these events into your Microsoft Sentinel workspace so they can be queried with Kusto Query Language (KQL) and used in analytics rules. No existing Microsoft Sentinel data connector supports this application's log format, so you plan to send the data directly using the Log Analytics Logs Ingestion API.
+
+You need to prepare the workspace to receive and store this custom data before you begin sending events from the application.
+
+What should you do?
+Enable the Azure Monitor Agent (AMA) data collection rule for Windows Event Logs and add the custom application as an event source so its events are automatically routed into a new table.
+説明
+This answer is incorrect. Azure Monitor Agent data collection rules for Windows Event Logs are designed for built-in Windows/Syslog event collection, not for ingesting arbitrary custom JSON application data, and they do not automatically create a new custom table for this purpose.
+正解
+In the Log Analytics workspace, use the Tables (preview) blade to create a new custom table and define its schema, then create a data collection rule (DCR) associated with a data collection endpoint (DCE) that maps the incoming JSON fields to the custom table columns.
+説明
+This answer is correct. The supported, modern method to prepare a Log Analytics/Microsoft Sentinel workspace for custom data ingested via the Logs Ingestion API is to explicitly create the custom table (with its schema) using the Tables blade, then create a DCR and DCE that define the transformation and mapping used when the application calls the ingestion endpoint.
+Install the legacy Microsoft Monitoring Agent (MMA) on a server and configure the Custom Logs data source under Advanced Settings so the workspace automatically creates the table when the first log file is uploaded.
+説明
+This answer is incorrect. The Custom Logs data source under the legacy MMA agent is a deprecated method tied to the legacy agent, does not use the Logs Ingestion API, and is not the recommended approach for new custom log ingestion in Microsoft Sentinel.
+回答は不正解です
+Open the Log Analytics workspace and run a KQL command such as ".create table" in the Logs blade to define the table schema, then reference that table name in the application's ingestion calls.
+説明
+This answer is incorrect. KQL "create table" style commands are not used to define custom tables for ingestion in the Log Analytics workspace UI; table creation and schema definition for API-based ingestion must be done through the Tables (preview) blade or corresponding ARM/API calls, not ad hoc query commands in the Logs blade.
+全体的な説明
+To ingest custom application data into Microsoft Sentinel via the Logs Ingestion API, you must first create a custom table with a defined schema in the Log Analytics workspace, then configure a data collection rule and data collection endpoint that transform and route the incoming data to that table. This is the current, supported workflow for custom log collection, replacing the legacy MMA-based Custom Logs method.
+ドメイン
+Collect activity and events in Microsoft Sentinel
+問題20不正解
+Your company has five Azure Function apps that all need to read secrets from the same Azure Key Vault. You want to create a single managed identity that can be assigned to all five Function apps simultaneously, and the identity must continue to exist even if one or more of the Function apps are deleted and recreated. You need to configure an identity solution that meets these requirements while avoiding the management overhead of storing and rotating credentials manually.
+
+What should you implement?
+正解
+A user-assigned managed identity assigned to all five Function apps
+説明
+This answer is correct. A user-assigned managed identity is created as a standalone Azure resource with its own lifecycle, independent of any Function app. It can be assigned to multiple resources (such as all five Function apps) simultaneously, and Microsoft Entra ID automatically manages the underlying credentials, eliminating manual secret rotation.
+A service principal with a client secret stored in Key Vault
+説明
+This answer is incorrect. A service principal with a client secret requires manual creation, storage, and periodic rotation of the secret, which introduces the exact credential management overhead the scenario is trying to avoid. Managed identities are designed specifically to eliminate this need.
+回答は不正解です
+A system-assigned managed identity on each Function app
+説明
+This answer is incorrect. A system-assigned managed identity is tied directly to the lifecycle of a single Azure resource, so it is automatically deleted when that resource is deleted, and it cannot be shared across multiple Function apps. This does not meet the requirement for an identity that persists independently and can be reused across five apps.
+An app registration in Microsoft Entra ID with a certificate credential
+説明
+This answer is incorrect. An app registration with a certificate still requires you to manage certificate issuance, storage, and renewal, which does not eliminate credential management overhead. Managed identities remove this burden entirely by having Microsoft Entra ID handle credential rotation automatically.
+全体的な説明
+User-assigned managed identities are standalone Microsoft Entra ID objects that exist independently of any single Azure resource, allowing the same identity to be attached to multiple resources (like several Function apps) while Microsoft Entra ID automatically manages the underlying credentials. This makes them the correct choice when an identity needs to be shared across resources and persist beyond the lifecycle of any one resource, unlike system-assigned identities, which are resource-specific, or traditional service principals/app registrations, which require manual credential management.
+ドメイン
+Secure access to resources by using Microsoft Entra ID
+問題21正解
+Your organization uses Azure Backup to protect several Recovery Services vaults containing critical VM and SQL Server backups. The security team is concerned that if a Backup Administrator's credentials are compromised, an attacker could disable soft delete, modify backup policies, or delete recovery points, causing irreversible data loss.
+
+You need to implement a security control that requires approval from a designated security team member, who has NO Contributor access to the Recovery Services vault, before any critical backup operation (such as disabling soft delete, changing security PINs, or deleting backup data) can be completed.
+
+Which Azure Backup security feature should you configure to meet this requirement?
+Enable soft delete on the Recovery Services vault
+説明
+This answer is incorrect. Soft delete automatically retains deleted backup data for a retention period, allowing recovery from accidental or malicious deletion, but it does not introduce an approval workflow requiring a separate authorized user to approve critical operations. It is a valuable complementary control but does not satisfy the stated requirement.
+Enable vault-level immutability on the Recovery Services vault
+説明
+This answer is incorrect. Vault immutability prevents recovery points from being deleted or having their retention shortened for the duration the immutability setting is enabled, but it does not create an approval-based workflow for critical operations and, once locked, cannot be reversed even by authorized security staff.
+Enforce Microsoft Entra multifactor authentication (MFA) for all users with access to the Recovery Services vault
+説明
+This answer is incorrect. While enforcing MFA strengthens authentication and reduces the risk of credential compromise, it does not create a separation-of-duties model where a second, independent approver must authorize critical backup operations. MFA alone does not stop an attacker who has already compromised valid MFA-enabled credentials.
+回答は正解です
+Configure Multi-user authorization (MUA) using a Resource Guard deployed in a separate subscription or tenant
+説明
+This answer is correct. Multi-user authorization (MUA) uses a Resource Guard resource, ideally deployed in a separate subscription or Microsoft Entra tenant that the Backup Administrator does not control, to enforce that critical operations (disabling soft delete, modifying security settings, deleting backup items, etc.) require explicit approval from a user who has permissions on the Resource Guard, such as the Reader role plus Microsoft.RecoveryServices/locations/backupResourceGuardProxy actions. This directly separates duties and prevents a single compromised account from performing destructive actions unilaterally.
+全体的な説明
+Multi-user authorization (MUA) using Resource Guard is the Azure Backup security feature specifically designed to enforce separation of duties for critical operations. By placing the Resource Guard in a separate subscription or tenant that the Backup Administrator cannot modify, organizations ensure that destructive or security-impacting actions require approval from an independent security team member, protecting backups even if administrator credentials are compromised.
+ドメイン
+Implement governance for security and compliance
+問題22不正解
+Your organization uses an Azure Key Vault named CorpVault01 to store TLS certificates used during virtual machine deployments. The security team has configured the Key Vault firewall to deny all public network access by default, allowing only specific corporate office IP ranges.
+
+Recently, the operations team reports that new virtual machine deployments are failing. The deployment process uses an Azure Resource Manager template that retrieves a certificate from CorpVault01 to install on the VM during provisioning. Azure Resource Manager itself is not integrated with a virtual network and does not originate from the allowed corporate IP ranges.
+
+You need to allow Azure Resource Manager to retrieve the certificate from CorpVault01 during deployments, while maintaining the existing IP-based restrictions for all other public network traffic.
+
+What should you do?
+回答は不正解です
+Add a private endpoint connection for CorpVault01 and configure the virtual network used by Azure Resource Manager
+説明
+This answer is incorrect. While private endpoints provide secure connectivity to Key Vault, Azure Resource Manager operates as a global control-plane service and is not deployed within a customer virtual network, so it cannot connect through a private endpoint. This solution would not resolve the described failure.
+正解
+In the Key Vault networking settings, enable the "Allow trusted Microsoft services to bypass this firewall" option
+説明
+This answer is correct. Azure Resource Manager is classified as a trusted Microsoft service, and enabling the "Allow trusted Microsoft services to bypass this firewall" setting permits it to access Key Vault (for approved scenarios like certificate deployment to VMs) even though the firewall blocks other public traffic outside the allowed IP ranges. This setting is specifically designed for this exact scenario without weakening the existing IP restrictions.
+Create a service endpoint for Microsoft.KeyVault on the virtual network associated with the VM deployments
+説明
+This answer is incorrect. Service endpoints extend a virtual network's identity to a service, but Azure Resource Manager does not originate traffic from within a customer virtual network, so a service endpoint would not enable Azure Resource Manager to reach Key Vault.
+Change the Key Vault public network access setting to "Enabled from all networks"
+説明
+This answer is incorrect. While this would technically allow Azure Resource Manager through, it would also remove all IP-based restrictions and expose Key Vault to the entire internet, violating the requirement to maintain existing restrictions for other traffic.
+全体的な説明
+Key Vault firewall settings include a specific option to allow trusted Microsoft services (such as Azure Resource Manager, Azure Backup, and others) to bypass firewall rules for specific approved operations, without requiring you to open the vault to all public traffic. This is the intended mechanism for scenarios where a first-party Azure service needs vault access despite IP-based restrictions being in place.
+ドメイン
+Secure secrets and keys by using Azure Key Vault
+問題23正解
+Your organization uses Azure Virtual Network Manager (AVNM) to manage network security across 50 virtual networks distributed among multiple subscriptions in a single management group. Individual application teams have permissions to create and modify network security groups (NSGs) on their own subnets and NICs.
+
+The security team needs to enforce a mandatory rule that blocks all inbound traffic on TCP port 3389 (RDP) across every virtual network in the management group. The rule must NOT be able to be overridden, bypassed, or removed by any application team, regardless of the NSG rules they configure on their own resources.
+
+Which AVNM configuration should the security team implement to meet this requirement?
+Deploy an Azure Firewall in each virtual network and configure a network rule collection that denies TCP port 3389 inbound traffic.
+説明
+This answer is incorrect. While Azure Firewall can enforce network rules, it is not a feature of Azure Virtual Network Manager and deploying it per-VNet is not a centralized network access policy mechanism; it also does not inherently prevent teams from creating conflicting NSG rules that could still expose the port.
+Instruct each application team to add a deny rule for TCP port 3389 inbound to their NSGs, and use Azure Policy to audit for compliance across all subscriptions.
+説明
+This answer is incorrect. Relying on application teams to manually configure NSGs allows them to modify or remove the rule at any time, directly violating the requirement that the rule cannot be bypassed; Azure Policy would only provide auditing/reporting after the fact rather than preventive enforcement.
+Create a connectivity configuration using a hub-and-spoke topology and configure a network security group on the hub virtual network to deny TCP port 3389 inbound traffic.
+説明
+This answer is incorrect. Connectivity configurations in AVNM define network topology (mesh or hub-and-spoke) and control connectivity between virtual networks, not security enforcement; an NSG on the hub VNet would not automatically apply to or protect traffic within each spoke VNet, and application teams could still modify their own NSGs.
+回答は正解です
+Create a security admin configuration with a security admin rule that denies TCP port 3389 inbound, applied to a network group containing all virtual networks, and deploy it to the management group scope.
+説明
+This answer is correct. Security admin rules in Azure Virtual Network Manager are evaluated before NSG rules and cannot be overridden by resource owners; only users with permissions on the AVNM instance itself can modify them, making this the only option that guarantees centralized, non-bypassable enforcement across all VNets in the management group.
+全体的な説明
+Azure Virtual Network Manager's security admin rules are specifically designed for centralized, high-priority security enforcement that takes precedence over and cannot be overridden by standard NSG rules, making them the correct tool for organization-wide mandatory restrictions like blocking RDP across all VNets in a management group.
+ドメイン
+Implement security for Azure network services
+問題24正解
+Your organization has provisioned Microsoft Security Copilot and assigned compute capacity. A security analyst named Priya has the Security Copilot Contributor role, which lets her run investigation sessions, use prompts and set up agents for herself.
+
+Priya must now also restrict which preinstalled plugins are available to the rest of the organization, change the Security Compute Unit capacity and overage settings for the workspace, and assign Security Copilot roles to other analysts. She reports that none of these settings are visible to her.
+
+You need to grant Priya the minimum additional permission required to perform these tasks, without granting permissions beyond what is necessary.
+
+Which role should you assign to Priya?
+Security Copilot Contributor
+説明
+This answer is incorrect. Contributor is the role Priya already holds; it allows running sessions, managing her own promptbooks, setting up preinstalled plugins for herself and installing agents, but it does not expose owner settings such as capacity, plugin availability for the organisation, or role assignment.
+回答は正解です
+Security Copilot Owner
+説明
+This answer is correct. Microsoft states that the Security Copilot Owner role is required to manage owner settings, which include capacity association and overage units, plugin availability and restriction for the organisation, data sharing, and Security Copilot role assignments. It is the least-privileged role that covers all three tasks in the scenario.
+Security Administrator
+説明
+This answer is incorrect. Security Administrator is a Microsoft Entra role, not a Security Copilot role, and Microsoft explicitly advises against assigning it purely to grant Copilot access because it carries far broader permissions. The only Entra-level Copilot setting it controls is audit logging enablement.
+Global Reader
+説明
+This answer is incorrect. Global Reader provides read-only access across Microsoft 365 admin centers and services, allowing users to view configurations but not make changes. It would not allow Priya to enable or configure agents in Security Copilot.
+全体的な説明
+Security Copilot has two platform roles, Owner and Contributor, that are defined inside Security Copilot rather than in Microsoft Entra ID. Contributor covers day-to-day work such as running prompts, managing personal promptbooks, configuring preinstalled plugins for oneself and installing agents. Owner settings are where capacity association and overage units, preinstalled plugin availability for the organisation, data sharing and role assignment are managed, and Microsoft states that the Security Copilot Owner role is required to manage them. Broad Microsoft Entra roles such as Security Administrator or Global Reader are not the intended way to grant these Copilot-specific permissions and would violate least privilege.
+ドメイン
+Implement Microsoft Security Copilot
+問題25不正解
+Your company runs a Generation 2 Azure virtual machine (VM) named VM1 that hosts a sensitive line-of-business application. VM1 currently has its security type set to Standard. Microsoft Defender for Servers Plan 2 is enabled on the subscription.
+
+The security team wants to use Microsoft Defender for Cloud to monitor VM1 for unauthorized changes to boot components, such as the boot loader, kernel, and drivers, and to receive alerts if a rootkit or bootkit tampers with the boot chain.
+
+You need to configure VM1 so that this monitoring capability can be enabled.
+
+What should you do first?
+Change the security type of VM1 to Confidential VM.
+説明
+This answer is incorrect. Confidential VM is designed to protect data in use through hardware-based memory encryption and is a separate security type from Trusted launch; it does not provide the Secure Boot and vTPM combination that Defender for Cloud uses specifically for boot integrity monitoring in this scenario.
+Install the Azure Monitor Agent on VM1 and enable Change Tracking and Inventory.
+説明
+This answer is incorrect. Change Tracking and Inventory monitors file and registry changes at the OS level over time, but it does not perform cryptographic attestation of the boot process, which is what integrity monitoring via vTPM and Secure Boot provides.
+回答は不正解です
+Enable Microsoft Defender for Endpoint integration on VM1 through Defender for Cloud settings.
+説明
+This answer is incorrect. Enabling Microsoft Defender for Endpoint integration provides endpoint detection and response signals but does not enable or require boot-integrity verification, which depends on the underlying VM security type and vTPM/Secure Boot settings, not this integration alone.
+正解
+Change the security type of VM1 to Trusted launch, and then enable Secure Boot and vTPM.
+説明
+This answer is correct. Integrity monitoring (Guest Attestation) in Defender for Cloud requires the VM to use the Trusted launch security type, which enables Secure Boot to prevent unauthorized boot loaders/drivers and vTPM to securely store measurements used to attest boot integrity; without Trusted launch, this monitoring feature cannot be enabled.
+全体的な説明
+To enable integrity monitoring in Microsoft Defender for Cloud, a VM must first be configured with the Trusted launch security type, which allows Secure Boot and a virtual TPM (vTPM) to be enabled. These features work together to measure and attest the boot process, letting Defender for Cloud detect unauthorized changes to boot components—capabilities not provided by endpoint integration, Confidential VM alone, or traditional change tracking agents.
+ドメイン
+Implement security for servers and virtual machines (VMs)
